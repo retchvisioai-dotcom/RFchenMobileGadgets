@@ -33,6 +33,7 @@
 </head>
 <body class="min-h-screen pb-24">
 
+<div id="holdPage" style="display:none;position:fixed;inset:0;z-index:45" class="bg-slate-950 flex-col items-center justify-center text-center p-8"><div class="text-5xl mb-4">🛠️</div><h1 class="text-3xl font-black text-white">Coming soon</h1><p class="text-sm text-slate-400 mt-2 max-w-xs">This page is being set up. Please check back soon.</p><button class="text-xs text-slate-500 mt-10 underline" onclick="authBtn()">Staff / owner login</button></div>
 <div id="demoBar" class="hidden bg-amber-500 text-slate-950 text-center text-xs font-bold py-1.5">DEMO MODE — sample shop and sample data. Login is turned off.</div>
 <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-3 py-2.5">
   <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
@@ -145,6 +146,7 @@ function phoneImg(u){
   return `<svg viewBox="0 0 100 100" class="w-full h-full" style="background:linear-gradient(135deg,#0f172a,#020617)">${lap?`<rect x="18" y="26" width="64" height="40" rx="3" fill="${c}" stroke="#94a3b8"/><rect x="10" y="68" width="80" height="5" rx="2" fill="#94a3b8"/>`:`<rect x="33" y="10" width="34" height="80" rx="7" fill="${c}" stroke="#94a3b8" stroke-width="1.5"/><rect x="36" y="15" width="28" height="70" rx="3" fill="#0b1220"/><circle cx="41" cy="22" r="3" fill="#334155"/><circle cx="48" cy="22" r="3" fill="#334155"/>`}</svg>`;
 }
 function brandRender(){
+  const hold=!!S.hold_mode&&!isDemo&&!role&&!meR;$('holdPage').style.display=hold?'flex':'none';if(hold)document.title='Coming soon';
   $('demoBar').classList.toggle('hidden',!isDemo);
   const lg=$('brandLogo'),mk=$('brandMark'),fv=$('favicon');
   if(S.logo_url){lg.src=S.logo_url;lg.alt=S.name+' logo';lg.classList.remove('hidden');mk.classList.add('hidden');fv.href=S.logo_url}
@@ -681,6 +683,7 @@ function vSet(){
   $('vb').innerHTML=`<div class="grid md:grid-cols-2 gap-3"><div class="space-y-3"><div class="card p-4 space-y-2"><h3 class="font-black text-sm">Store info</h3>
   ${[['sName','Store name',S.name],['sTag','Tagline',S.tag],['sAddr','General address',S.address],['sPhone','Phone',S.phone],['sEmail','Email',S.email||''],['sMsg','Messenger link (https://m.me/yourpage)',S.messenger],['sFb','Facebook page',S.facebook],['sPromo','Promo banner text',S.promo],['sLogo','Logo image link (https://… or assets/logo.png)',S.logo_url||''],['sBanner','Promo banner image link (optional)',S.banner_url||''],['sCredit','Footer credit (optional)',S.credit||''],['sPrefix','Contract number prefix (e.g. RF)',S.contract_prefix||'']].map(([i,l,v])=>`<div><label class="lbl">${l}</label><input id="${i}" class="inp" value="${esc(v)}"></div>`).join('')}
   <div class="grid grid-cols-2 gap-2"><div><label class="lbl">Reseller hold (hours)</label><input id="sHold" type="number" min="1" max="24" class="inp" value="${S.hold_hours}"></div><div><label class="lbl">Default RTO months</label><input id="sMo" type="number" min="1" max="24" class="inp" value="${S.rto_months}"></div><div><label class="lbl">Grace days before device lock</label><input id="sGrace" type="number" min="0" max="60" class="inp" value="${S.grace_days??7}"></div></div>
+  <label class="flex gap-2 items-start text-xs mt-3 cursor-pointer card p-3"><input id="sHold2" type="checkbox" class="mt-0.5" ${S.hold_mode?'checked':''}><span><b>Hide the public site ("Coming soon")</b><br><span class="text-slate-400">Visitors see a Coming soon page. Staff, owner and resellers can still log in. Turn this off to go live.</span></span></label>
   <h4 class="font-black text-xs mt-3">"How to buy" page (one item per line)</h4>
   ${[['iReq','Installment requirements',(S.info?.requirements||[]).join('\n')],['iWar','Warranty',(S.info?.warranty||[]).join('\n')],['iDel','Delivery',(S.info?.delivery||[]).join('\n')]].map(([i,l,v])=>`<div><label class="lbl">${l}</label><textarea id="${i}" rows="3" class="inp">${esc(v)}</textarea></div>`).join('')}
   ${[['iGift','Free gift box contents',S.info?.gift||''],['iPay','Payment methods',S.info?.payments||''],['iCeo','Owner / CEO name (shown on contact)',S.info?.ceo||'']].map(([i,l,v])=>`<div><label class="lbl">${l}</label><input id="${i}" class="inp" value="${esc(v)}"></div>`).join('')}<button class="btn b-em w-full" onclick="saveSettings()">Save settings</button></div>
@@ -694,7 +697,7 @@ function vSet(){
 async function saveSettings(){
   const ln=i=>($(i).value||'').split('\n').map(x=>x.trim()).filter(Boolean);
   const info={...(S.info||{}),requirements:ln('iReq'),warranty:ln('iWar'),delivery:ln('iDel'),gift:$('iGift').value.trim(),payments:$('iPay').value.trim(),ceo:$('iCeo').value.trim()};
-  const {error}=await sb.from('mcg_settings').update({name:$('sName').value||'Your Gadget Shop',tag:$('sTag').value,address:$('sAddr').value,phone:$('sPhone').value,email:$('sEmail').value.trim(),messenger:$('sMsg').value.trim(),facebook:$('sFb').value.trim(),promo:$('sPromo').value,logo_url:$('sLogo').value.trim()||null,banner_url:$('sBanner').value.trim()||null,credit:$('sCredit').value.trim()||null,contract_prefix:($('sPrefix').value.trim()||'RF').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8)||'RF',grace_days:Math.max(0,+$('sGrace').value||0),info,hold_hours:+$('sHold').value||2,rto_months:+$('sMo').value||3}).eq('id',1);
+  const {error}=await sb.from('mcg_settings').update({name:$('sName').value||'Your Gadget Shop',tag:$('sTag').value,address:$('sAddr').value,phone:$('sPhone').value,email:$('sEmail').value.trim(),messenger:$('sMsg').value.trim(),facebook:$('sFb').value.trim(),promo:$('sPromo').value,logo_url:$('sLogo').value.trim()||null,banner_url:$('sBanner').value.trim()||null,credit:$('sCredit').value.trim()||null,contract_prefix:($('sPrefix').value.trim()||'RF').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8)||'RF',grace_days:Math.max(0,+$('sGrace').value||0),hold_mode:$('sHold2').checked,info,hold_hours:+$('sHold').value||2,rto_months:+$('sMo').value||3}).eq('id',1);
   if(error)return err(error);await refresh(true);toast('Settings saved')}
 async function upBranch(id,patch){const {error}=await sb.from('mcg_branches').update(patch).eq('id',id);if(error)return err(error);await refresh(true)}
 async function addAcc(){if(!$('aNum').value.trim()||!$('aName').value.trim())return toast('Number and account name required',true);const {error}=await sb.from('mcg_pay_accounts').insert({kind:$('aKind').value,label:$('aLabel').value,number:$('aNum').value.trim(),account_name:$('aName').value.trim()});if(error)return err(error);await refresh(true)}
