@@ -3,9 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="RF Chen Gadgets — live iPhone & gadget stock across 8 Negros branches, rent-to-own, swap calculator, warranty check and repair tracker.">
+<meta name="description" content="RF Chein Gadgets — live iPhone & gadget stock across 8 Negros branches, rent-to-own, swap calculator, warranty check and repair tracker.">
 <meta name="theme-color" content="#020617">
-<title>RF Chen Gadgets — Live Stock, Rent-To-Own & Reseller Hub</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<title>RF Chein Gadgets — Live Stock, Rent-To-Own & Reseller Hub</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
@@ -34,8 +35,8 @@
 <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-3 py-2.5">
   <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
     <div class="flex items-center gap-2.5">
-      <div class="bg-emerald-500 text-slate-950 font-black p-2 rounded-xl text-base">RF</div>
-      <div><h1 id="brandName" class="font-extrabold text-sm text-white leading-none">RF CHEN GADGETS</h1><p id="brandTag" class="text-[10px] text-slate-400 mt-0.5"></p></div>
+      <img src="assets/logo.png" alt="RF Chein Gadgets logo" class="w-10 h-10 rounded-full" width="40" height="40">
+      <div><h1 id="brandName" class="font-extrabold text-sm text-white leading-none">RF CHEIN GADGETS</h1><p id="brandTag" class="text-[10px] text-slate-400 mt-0.5"></p></div>
     </div>
     <div class="flex items-center gap-2 max-w-full">
       <div id="tabs" class="flex gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto"></div>
@@ -50,6 +51,7 @@
 <main class="max-w-7xl mx-auto p-3 sm:p-5">
   <!-- PUBLIC -->
   <section id="v-public" class="hidden space-y-5">
+    <img src="assets/banner.jpg" alt="Rent-to-own iPhones, as low as ₱3,500 downpayment" class="w-full rounded-2xl border border-emerald-500/20" loading="lazy">
     <div class="rounded-2xl p-4 sm:p-5 border border-emerald-500/20 bg-gradient-to-r from-emerald-900/40 to-slate-900 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
       <div><span class="pill bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">BRANCH SELECTOR</span>
         <h2 class="text-lg sm:text-xl font-black text-white mt-2">Find stock at your nearest branch</h2>
@@ -121,7 +123,7 @@ const today=()=>dayOf(Date.now());
 const PUB='id,model,category,storage,condition,price,status,color,notes,photo_url,added_at,branch_id,rto_dp,held_until';
 const STATUSES=['Received','Diagnosing','Waiting Parts','Repairing','Testing','Ready for Pickup','Released'];
 
-let S={name:'RF CHEN GADGETS',tag:'',address:'',phone:'',messenger:'',facebook:'',promo:'',frozen:false,hold_hours:2,rto_months:3};
+let S={name:'RF CHEIN GADGETS',tag:'',address:'',phone:'',messenger:'',facebook:'',promo:'',frozen:false,hold_hours:2,rto_months:3};
 let branches=[],payAcc=[],units=[],costs={},sales=[],saleCosts={},swaps=[],audit=[],staffList=[],resellers=[],holds=[],payouts=[],contracts=[],cpays=[],repairs=[];
 let rCat=[],myHolds=[],meR=null;
 let session=null,role=null,view='public',ptab='cat',pubBranch='',vtab='dash',ptab2='sell',cart=[],cartHold=null,posBranch='';
@@ -578,7 +580,7 @@ function vSet(){
   <div class="card p-4"><h3 class="font-black text-sm mb-2">Owner PIN (discounts & voids by cashiers)</h3><input id="oldPin" type="password" inputmode="numeric" maxlength="8" class="inp mb-2" placeholder="Current PIN (default 1234)"><input id="newPin" type="password" inputmode="numeric" maxlength="8" class="inp" placeholder="New PIN (4–8 digits)"><button class="btn b-am w-full mt-2" onclick="changePin()">Update PIN</button></div>
   <div class="card p-4"><h3 class="font-black text-sm mb-2">Data</h3><div class="flex gap-2 flex-wrap"><button class="btn b-sl" onclick="exportInvCSV()">Inventory CSV</button><button class="btn b-sl" onclick="exportSalesCSV()">Sales CSV</button></div></div></div></div>`;
 }
-async function saveSettings(){const {error}=await sb.from('mcg_settings').update({name:$('sName').value||'RF CHEN GADGETS',tag:$('sTag').value,address:$('sAddr').value,phone:$('sPhone').value,messenger:$('sMsg').value.trim(),facebook:$('sFb').value.trim(),promo:$('sPromo').value,hold_hours:+$('sHold').value||2,rto_months:+$('sMo').value||3}).eq('id',1);if(error)return err(error);await refresh(true);toast('Settings saved')}
+async function saveSettings(){const {error}=await sb.from('mcg_settings').update({name:$('sName').value||'RF CHEIN GADGETS',tag:$('sTag').value,address:$('sAddr').value,phone:$('sPhone').value,messenger:$('sMsg').value.trim(),facebook:$('sFb').value.trim(),promo:$('sPromo').value,hold_hours:+$('sHold').value||2,rto_months:+$('sMo').value||3}).eq('id',1);if(error)return err(error);await refresh(true);toast('Settings saved')}
 async function upBranch(id,patch){const {error}=await sb.from('mcg_branches').update(patch).eq('id',id);if(error)return err(error);await refresh(true)}
 async function addAcc(){if(!$('aNum').value.trim()||!$('aName').value.trim())return toast('Number and account name required',true);const {error}=await sb.from('mcg_pay_accounts').insert({kind:$('aKind').value,label:$('aLabel').value,number:$('aNum').value.trim(),account_name:$('aName').value.trim()});if(error)return err(error);await refresh(true)}
 async function delAcc(id){if(!confirm('Remove this account from the public list?'))return;const {error}=await sb.from('mcg_pay_accounts').update({active:false}).eq('id',id);if(error)return err(error);await refresh(true)}
