@@ -148,6 +148,8 @@ function phoneImg(u){
 function brandRender(){
   const hold=!!S.hold_mode&&!isDemo&&!role&&!meR;$('holdPage').style.display=hold?'flex':'none';if(hold)document.title='Coming soon';$('holdCredit').textContent=S.credit||'';
   $('demoBar').classList.toggle('hidden',!isDemo);
+  if(isDemo){$('demoBar').textContent=S.name==='MC Gadgets'?'DEMO PREVIEW prepared for MC Gadgets — not their official website. Sample data. Login is turned off.':'DEMO MODE — sample shop and sample data. Login is turned off.';
+    if(!document.querySelector('meta[name=robots]')){const m=document.createElement('meta');m.name='robots';m.content='noindex,nofollow';document.head.appendChild(m)}}
   const lg=$('brandLogo'),mk=$('brandMark'),fv=$('favicon');
   if(S.logo_url){lg.src=S.logo_url;lg.alt=S.name+' logo';lg.classList.remove('hidden');mk.classList.add('hidden');fv.href=S.logo_url}
   else{lg.classList.add('hidden');mk.classList.remove('hidden');mk.textContent=(S.name||'GS').split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'GS'}
@@ -161,7 +163,20 @@ async function loadPublic(){
   const [st,br,pa,un]=await Promise.all([sb.from('mcg_settings').select('*').eq('id',1).single(),sb.from('mcg_branches').select('*').eq('active',true).order('sort'),sb.from('mcg_pay_accounts').select('*').eq('active',true).order('id'),
     sb.from('mcg_units').select(role?'*':PUB).order('added_at',{ascending:false}).limit(2000)]);
   if(st.data)S=st.data;branches=br.data||[];payAcc=pa.data||[];if(un.data)units=un.data;
-  if(isDemo){
+  if(isDemo&&/^mc(\s*gadgets)?$/i.test((DEMO||'').trim())){
+    S={...S,name:'MC Gadgets',tag:'Your Gadget, Your Way!',address:'Silay • Kabankalan • Bacolod • San Carlos',phone:'',email:'',messenger:'',facebook:'https://www.facebook.com/MCGadgetsPH',promo:'In-house Rent-to-Own: iPhone 11 from ₱3,500 downpayment • Cash • Installment • Trade-in',logo_url:'assets/mc-logo.png',banner_url:null,credit:'Developed by Retch Pornes',
+      info:{requirements:['1 valid ID only (more may be needed per financing partner)'],requirements_note:'Walk-in or online application',warranty:['1-month warranty on pre-owned Apple devices'],delivery:[],gift:'',payments:'Cash · Credit card · Installment · In-house Rent-to-Own · Trade-in · Skyro · Salmon · PalmPay · PayJoy · BillEase · Home Credit',ceo:''}};
+    branches=[
+      {id:1,name:'Silay Branch',address:'Beside Baldevia Pension House & Casa Estyna Restaurant',hours:'8:00 AM – 7:00 PM'},
+      {id:2,name:'Kabankalan Branch',address:'Gaisano Grand Kabankalan, Ground Floor, beside Western Union',hours:'8:00 AM – 8:00 PM'},
+      {id:3,name:'Bacolod Branch 1 — Mobile Hub',address:'GT 888 Chinatown Square Phase 2 (New Building), in front of Mr. DIY',hours:'10:00 AM – 8:00 PM'},
+      {id:4,name:'Bacolod Branch 2',address:'GT 888 Chinatown Square Phase 1, in front of Bascon Cake',hours:'10:00 AM – 8:00 PM'},
+      {id:5,name:'San Carlos Branch',address:'JUSA Building, Valdivia St. corner V.F. Gustilo St., Brgy. IV, San Carlos City',hours:'9:00 AM – 6:30 PM'}];
+    const mk=(m,s,pr,dp,c,b)=>({id:'mc-'+m.replace(/\W/g,'')+s,model:m,category:'Pre-Owned',storage:s,condition:'Pre-owned',price:pr,rto_dp:dp,rto_price:null,status:'Available',color:c,notes:'Sample price from the MC Gadgets Masskara sale poster',photo_url:null,added_at:new Date(Date.now()-b*3600000).toISOString(),branch_id:(b%5)+1,held_until:null});
+    units=[mk('iPhone 11','128GB',12999,3500,'#a78bfa',1),mk('iPhone 12','128GB',14999,4500,'#1d4ed8',2),mk('iPhone 13','128GB',18999,6500,'#f9a8d4',3),mk('iPhone 14','128GB',25999,2500,'#1e293b',4),mk('iPhone 15','128GB',35999,3500,'#fda4af',5),
+      mk('iPhone 11 Pro','64GB',12999,3500,'#374151',6),mk('iPhone 12 Pro Max','256GB',25999,2500,'#1e3a8a',7),mk('iPhone 13 Pro','256GB',28999,3000,'#93c5fd',8),mk('iPhone 13 Pro Max','128GB',30999,3000,'#fcd34d',9),mk('iPhone 14 Pro Max','256GB',43999,4500,'#6d28d9',10)];
+    payAcc=[];
+  } else if(isDemo){
     S={...S,name:(DEMO&&DEMO!=='1')?DEMO.slice(0,40):'Your Gadget Shop',tag:'Your trusted gadget shop',address:'Sample address, Your City',phone:'0900 000 0000',email:'',messenger:'',facebook:'',promo:'Rent-to-own phones with a low downpayment (sample promo)',logo_url:null,banner_url:null,credit:'Developed by Retch Pornes',
       info:{requirements:['Valid government ID','Proof of income','Active mobile number and email','2 contact references'],requirements_note:'Sample content',warranty:['Sample warranty terms go here'],delivery:['Sample delivery options go here'],gift:'',payments:'Cash · GCash · Maya · Bank transfer (sample)',ceo:''}};
     branches=branches.map((b,i)=>({...b,name:i===0?'Main Branch':'Branch '+(i+1),address:'Sample address',hours:'9:00 AM – 7:00 PM daily'}));
