@@ -33,6 +33,7 @@
 </head>
 <body class="min-h-screen pb-24">
 
+<div id="demoBar" class="hidden bg-amber-500 text-slate-950 text-center text-xs font-bold py-1.5">DEMO MODE — sample shop and sample data. Login is turned off.</div>
 <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-3 py-2.5">
   <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
     <div class="flex items-center gap-2.5">
@@ -41,7 +42,7 @@
     </div>
     <div class="flex items-center gap-2 max-w-full">
       <div id="tabs" class="flex gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto"></div>
-      <button id="pwBtn" class="btn b-sl hidden" onclick="newPassModal()" title="Change password">🔑 Password</button>
+      <button id="pwBtn" class="btn b-sl" style="display:none" onclick="newPassModal()" title="Change password">🔑 Password</button>
       <button id="authBtn" class="btn b-sl" onclick="authBtn()">Login</button>
     </div>
   </div>
@@ -115,6 +116,8 @@
 <div id="printArea"></div>
 
 <script>
+const DEMO=new URLSearchParams(location.search).get('demo');const isDemo=DEMO!==null;
+if(isDemo){try{Object.keys(localStorage).filter(k=>/^sb-/.test(k)).forEach(k=>localStorage.removeItem(k))}catch(e){}}
 const sb=supabase.createClient('https://kuinykivbhmzelwibzjm.supabase.co','sb_publishable_43nmIW6M6W8D2b53cLfhbA_S52GDAMm');
 const {peso,$,esc,fmt,fdate,ftime,dayOf,today,num,resizeImage,dl,csv}=RFGShared;
 const rtoTotal=u=>num(u.rto_price)>0?num(u.rto_price):num(u.price);
@@ -142,6 +145,7 @@ function phoneImg(u){
   return `<svg viewBox="0 0 100 100" class="w-full h-full" style="background:linear-gradient(135deg,#0f172a,#020617)">${lap?`<rect x="18" y="26" width="64" height="40" rx="3" fill="${c}" stroke="#94a3b8"/><rect x="10" y="68" width="80" height="5" rx="2" fill="#94a3b8"/>`:`<rect x="33" y="10" width="34" height="80" rx="7" fill="${c}" stroke="#94a3b8" stroke-width="1.5"/><rect x="36" y="15" width="28" height="70" rx="3" fill="#0b1220"/><circle cx="41" cy="22" r="3" fill="#334155"/><circle cx="48" cy="22" r="3" fill="#334155"/>`}</svg>`;
 }
 function brandRender(){
+  $('demoBar').classList.toggle('hidden',!isDemo);
   const lg=$('brandLogo'),mk=$('brandMark'),fv=$('favicon');
   if(S.logo_url){lg.src=S.logo_url;lg.alt=S.name+' logo';lg.classList.remove('hidden');mk.classList.add('hidden');fv.href=S.logo_url}
   else{lg.classList.add('hidden');mk.classList.remove('hidden');mk.textContent=(S.name||'GS').split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'GS'}
@@ -155,6 +159,12 @@ async function loadPublic(){
   const [st,br,pa,un]=await Promise.all([sb.from('mcg_settings').select('*').eq('id',1).single(),sb.from('mcg_branches').select('*').eq('active',true).order('sort'),sb.from('mcg_pay_accounts').select('*').eq('active',true).order('id'),
     sb.from('mcg_units').select(role?'*':PUB).order('added_at',{ascending:false}).limit(2000)]);
   if(st.data)S=st.data;branches=br.data||[];payAcc=pa.data||[];if(un.data)units=un.data;
+  if(isDemo){
+    S={...S,name:(DEMO&&DEMO!=='1')?DEMO.slice(0,40):'Your Gadget Shop',tag:'Your trusted gadget shop',address:'Sample address, Your City',phone:'0900 000 0000',email:'',messenger:'',facebook:'',promo:'Rent-to-own phones with a low downpayment (sample promo)',logo_url:null,banner_url:null,credit:'System by Marisa Jumawan',
+      info:{requirements:['Valid government ID','Proof of income','Active mobile number and email','2 contact references'],requirements_note:'Sample content',warranty:['Sample warranty terms go here'],delivery:['Sample delivery options go here'],gift:'',payments:'Cash · GCash · Maya · Bank transfer (sample)',ceo:''}};
+    branches=branches.map((b,i)=>({...b,name:i===0?'Main Branch':'Branch '+(i+1),address:'Sample address',hours:'9:00 AM – 7:00 PM daily'}));
+    units=units.map(u=>({...u,photo_url:null}));payAcc=[];
+  }
 }
 async function loadPrivate(){
   if(role){
@@ -203,14 +213,14 @@ function render(){
   const T=[['public','🌐 Public']];T.push(['reseller','🤝 Reseller Hub']);if(role)T.push(['pos','🏪 Staff POS']);if(role==='owner')T.push(['vault','👑 Owner Vault']);
   const pend=swaps.filter(s=>s.status==='Pending').length+resellers.filter(r=>!r.active).length+payouts.filter(p=>p.status==='Pending'&&num(p.amount)>0).length;
   $('tabs').innerHTML=T.map(([k,n])=>`<button class="btn ${k===view?'on':'text-slate-400'}" onclick="setView('${k}')">${n}${k==='vault'&&pend?` <span class="pill bg-rose-500 text-white">${pend}</span>`:''}</button>`).join('');
-  $('pwBtn').classList.toggle('hidden',!session);
+  $('pwBtn').style.display=(session&&!isDemo)?'':'none';
   $('authBtn').textContent=role||meR?'Logout':session?'Account':'Staff / Reseller login';
   ['public','reseller','pos','vault'].forEach(k=>$('v-'+k).classList.toggle('hidden',k!==view));
   if(view==='public')renderPublic();if(view==='reseller')renderReseller();if(view==='pos')renderPos();if(view==='vault')renderVault();
 }
 
 /* ---------- auth ---------- */
-function authBtn(){if(role||meR){sb.auth.signOut();toast('Logged out')}else if(session)accountModal();else loginModal()}
+function authBtn(){if(isDemo)return toast('Demo mode: login is turned off. Staff, owner and reseller screens are shown in the full app.',true);if(role||meR){sb.auth.signOut();toast('Logged out')}else if(session)accountModal();else loginModal()}
 function loginModal(mode='in',reseller){
   openModal(`<h3 class="font-black text-base mb-1">${mode==='in'?'Sign in':'Create account'}</h3><p class="text-xs text-slate-400 mb-3">${reseller?'Create an account, then request reseller access. ':''}For staff and resellers only — customers don't need an account.</p>
   <div class="space-y-2"><div><label class="lbl">Email</label><input id="aEmail" type="email" class="inp" autocomplete="email"></div>
