@@ -1,4 +1,4 @@
-# RF Chen Gadgets — Stock, Rent-To-Own & Reseller Hub
+# RF Chein Gadgets — Stock, Rent-To-Own & Reseller Hub
 
 Single-file web app (`index.html`) backed by Supabase and hosted on Vercel (no build step).
 
