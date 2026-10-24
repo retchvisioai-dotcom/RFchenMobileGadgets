@@ -12,6 +12,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="assets/js/shared.js"></script>
 <style>
   body{font-family:'Plus Jakarta Sans',sans-serif;background:#020617;color:#f1f5f9}
   .card{background:#0f172a;border:1px solid #1e293b;border-radius:16px}
@@ -125,14 +126,7 @@
 
 <script>
 const sb=supabase.createClient('https://kuinykivbhmzelwibzjm.supabase.co','sb_publishable_43nmIW6M6W8D2b53cLfhbA_S52GDAMm');
-const peso=n=>'₱'+Number(n||0).toLocaleString('en-PH');
-const $=id=>document.getElementById(id);
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt=t=>new Date(t).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZone:'Asia/Manila'});
-const fdate=t=>new Date(t).toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric',timeZone:'Asia/Manila'});
-const ftime=t=>new Date(t).toLocaleTimeString('en-PH',{hour:'numeric',minute:'2-digit',timeZone:'Asia/Manila'});
-const dayOf=t=>new Date(t).toLocaleDateString('en-CA',{timeZone:'Asia/Manila'});
-const today=()=>dayOf(Date.now());
+const {peso,$,esc,fmt,fdate,ftime,dayOf,today,num,resizeImage,dl,csv}=RFGShared;
 const PUB='id,model,category,storage,condition,price,status,color,notes,photo_url,added_at,branch_id,rto_dp,held_until';
 const STATUSES=['Received','Diagnosing','Waiting Parts','Repairing','Testing','Ready for Pickup','Released'];
 
@@ -148,7 +142,6 @@ function openModal(h){$('modalBody').innerHTML=h;$('modal').classList.remove('hi
 function closeModal(){$('modal').classList.add('hidden');stopCam();stopScan()}
 function copyText(t){if(navigator.clipboard)return navigator.clipboard.writeText(t).catch(fb);fb();function fb(){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}}
 const bname=id=>branches.find(b=>b.id===id)?.name||'—';
-const num=v=>Number(v||0);
 const avail=()=>units.filter(u=>u.status==='Available'&&!(u.held_until&&new Date(u.held_until)>new Date()));
 const profit=s=>num(s.price)-num(s.discount)-num(saleCosts[s.id])-num(s.commission);
 const net=s=>num(s.price)-num(s.discount);
@@ -157,10 +150,7 @@ function phoneImg(u){
   const c=/^#[0-9a-f]{3,8}$/i.test(u.color||'')?u.color:'#10b981',lap=u.category==='MacBook'||u.category==='iPad';
   return `<svg viewBox="0 0 100 100" class="w-full h-full" style="background:linear-gradient(135deg,#0f172a,#020617)">${lap?`<rect x="18" y="26" width="64" height="40" rx="3" fill="${c}" stroke="#94a3b8"/><rect x="10" y="68" width="80" height="5" rx="2" fill="#94a3b8"/>`:`<rect x="33" y="10" width="34" height="80" rx="7" fill="${c}" stroke="#94a3b8" stroke-width="1.5"/><rect x="36" y="15" width="28" height="70" rx="3" fill="#0b1220"/><circle cx="41" cy="22" r="3" fill="#334155"/><circle cx="48" cy="22" r="3" fill="#334155"/>`}</svg>`;
 }
-function resizeImage(file,max=900){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);c.toBlob(b=>res(b),'image/jpeg',.82)};im.onerror=rej;im.src=r.result};r.onerror=rej;r.readAsDataURL(file)})}
 function printHTML(html,width){const p=$('printArea');p.style.width=width||'80mm';p.innerHTML=html;setTimeout(()=>window.print(),50)}
-function dl(name,txt,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-const csv=rows=>rows.map(r=>r.map(c=>{c=String(c??'');if(/^[=+\-@]/.test(c))c="'"+c;return '"'+c.replace(/"/g,'""')+'"'}).join(',')).join('\n');
 
 /* ---------- data ---------- */
 async function loadPublic(){
