@@ -41,6 +41,7 @@
     </div>
     <div class="flex items-center gap-2 max-w-full">
       <div id="tabs" class="flex gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto"></div>
+      <button id="pwBtn" class="btn b-sl hidden" onclick="newPassModal()" title="Change password">🔑 Password</button>
       <button id="authBtn" class="btn b-sl" onclick="authBtn()">Login</button>
     </div>
   </div>
@@ -186,7 +187,7 @@ async function resolveRole(){
 }
 async function initAuth(){
   const {data}=await sb.auth.getSession();session=data.session;
-  sb.auth.onAuthStateChange((_e,s)=>{session=s;setTimeout(async()=>{await resolveRole();await refresh(true)},0)});
+  sb.auth.onAuthStateChange((_e,s)=>{session=s;setTimeout(async()=>{await resolveRole();await refresh(true);if(_e==='PASSWORD_RECOVERY')newPassModal()},0)});
   await resolveRole();
 }
 
@@ -203,6 +204,7 @@ function render(){
   const T=[['public','🌐 Public']];T.push(['reseller','🤝 Reseller Hub']);if(role)T.push(['pos','🏪 Staff POS']);if(role==='owner')T.push(['vault','👑 Owner Vault']);
   const pend=swaps.filter(s=>s.status==='Pending').length+resellers.filter(r=>!r.active).length+payouts.filter(p=>p.status==='Pending'&&num(p.amount)>0).length;
   $('tabs').innerHTML=T.map(([k,n])=>`<button class="btn ${k===view?'on':'text-slate-400'}" onclick="setView('${k}')">${n}${k==='vault'&&pend?` <span class="pill bg-rose-500 text-white">${pend}</span>`:''}</button>`).join('');
+  $('pwBtn').classList.toggle('hidden',!session);
   $('authBtn').textContent=role||meR?'Logout':session?'Account':'Staff / Reseller login';
   ['public','reseller','pos','vault'].forEach(k=>$('v-'+k).classList.toggle('hidden',k!==view));
   if(view==='public')renderPublic();if(view==='reseller')renderReseller();if(view==='pos')renderPos();if(view==='vault')renderVault();
@@ -215,7 +217,36 @@ function loginModal(mode='in',reseller){
   <div class="space-y-2"><div><label class="lbl">Email</label><input id="aEmail" type="email" class="inp" autocomplete="email"></div>
   <div><label class="lbl">Password (8+ characters)</label><input id="aPass" type="password" class="inp" autocomplete="${mode==='in'?'current-password':'new-password'}" onkeydown="if(event.key==='Enter')doAuth('${mode}')"></div></div>
   <button id="aGo" class="btn b-em w-full mt-3" onclick="doAuth('${mode}')">${mode==='in'?'Sign in':'Sign up'}</button>
-  <button class="text-xs text-emerald-400 mt-3 w-full" onclick="loginModal('${mode==='in'?'up':'in'}')">${mode==='in'?'No account yet? Sign up':'Have an account? Sign in'}</button>`);
+  <button class="text-xs text-emerald-400 mt-3 w-full" onclick="loginModal('${mode==='in'?'up':'in'}')">${mode==='in'?'No account yet? Sign up':'Have an account? Sign in'}</button>
+  ${mode==='in'?`<button class="text-xs text-slate-400 mt-2 w-full" onclick="forgotModal()">Forgot password?</button>`:''}`);
+}
+function forgotModal(){
+  openModal(`<h3 class="font-black text-base mb-1">Reset password</h3><p class="text-xs text-slate-400 mb-3">Enter your account email. We will send you a link to choose a new password.</p>
+  <div><label class="lbl">Email</label><input id="fEmail" type="email" class="inp" autocomplete="email" onkeydown="if(event.key==='Enter')sendReset()"></div>
+  <button id="fGo" class="btn b-em w-full mt-3" onclick="sendReset()">Send reset link</button>
+  <button class="text-xs text-slate-400 mt-3 w-full" onclick="loginModal('in')">Back to sign in</button>`);
+}
+async function sendReset(){
+  const email=$('fEmail').value.trim();if(!email)return toast('Enter your email',true);
+  $('fGo').disabled=true;
+  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+  $('fGo').disabled=false;if(error)return err(error);
+  openModal(`<h3 class="font-black mb-2">Check your email</h3><p class="text-sm text-slate-300">If <b>${esc(email)}</b> has an account, a reset link is on its way. Open it on this device, then choose a new password.</p><button class="btn b-sl w-full mt-3" onclick="closeModal()">Close</button>`);
+}
+function newPassModal(){
+  openModal(`<h3 class="font-black text-base mb-1">Choose a new password</h3><p class="text-xs text-slate-400 mb-3">At least 8 characters. Use something only you know.</p>
+  <div class="space-y-2"><div><label class="lbl">New password</label><input id="npA" type="password" class="inp" autocomplete="new-password"></div>
+  <div><label class="lbl">Repeat new password</label><input id="npB" type="password" class="inp" autocomplete="new-password" onkeydown="if(event.key==='Enter')saveNewPass()"></div></div>
+  <button id="npGo" class="btn b-em w-full mt-3" onclick="saveNewPass()">Save password</button>`);
+}
+async function saveNewPass(){
+  const a=$('npA').value,b=$('npB').value;
+  if(a.length<8)return toast('Password must be 8+ characters',true);
+  if(a!==b)return toast('Passwords do not match',true);
+  $('npGo').disabled=true;
+  const {error}=await sb.auth.updateUser({password:a});
+  $('npGo').disabled=false;if(error)return err(error);
+  closeModal();toast('Password updated');
 }
 async function doAuth(mode){
   const email=$('aEmail').value.trim(),password=$('aPass').value;if(!email||password.length<8)return toast('Enter email and a password of 8+ characters',true);
