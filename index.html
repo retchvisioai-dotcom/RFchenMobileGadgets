@@ -503,9 +503,26 @@ let scanner=null;
 function scanModal(){
   openModal(`<h3 class="font-black mb-2">📷 Scan IMEI barcode</h3><div id="scanBox" class="rounded-xl overflow-hidden"></div><button class="btn b-sl w-full mt-3" onclick="closeModal()">Close</button>`);
   if(typeof Html5Qrcode==='undefined')return $('scanBox').innerHTML='<p class="text-xs text-rose-400 p-3">Scanner library failed to load.</p>';
-  scanner=new Html5Qrcode('scanBox');
-  scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:260,height:120}},txt=>{const u=units.find(x=>x.imei===txt.trim()&&x.status==='Available');closeModal();if(u){addCart(u.id)}else toast('No available unit for '+txt,true)},()=>{}).catch(e=>{$('scanBox').innerHTML='<p class="text-xs text-rose-400 p-3">Camera unavailable: '+esc(e)+'</p>'});
+  scanner=new Html5Qrcode('scanBox',{useBarCodeDetectorIfSupported:true,verbose:false});
+  scanner.start({facingMode:'environment'},{fps:10,videoConstraints:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}},txt=>{const u=units.find(x=>x.imei===txt.trim()&&x.status==='Available');closeModal();if(u){addCart(u.id)}else toast('No available unit for '+txt,true)},()=>{}).catch(e=>{$('scanBox').innerHTML='<p class="text-xs text-rose-400 p-3">Camera unavailable: '+esc(e)+'</p>'});
 }
+const luhnOk=n=>{let s=0;for(let i=0;i<n.length;i++){let d=+n[n.length-1-i];if(i%2){d*=2;if(d>9)d-=9}s+=d}return s%10===0};
+let imeiScanner=null;
+function scanImeiInto(inputId){
+  if(typeof Html5Qrcode==='undefined')return toast('Scanner library failed to load',true);
+  closeImeiScan();
+  const L=document.createElement('div');L.id='scanLayer';L.style.cssText='position:fixed;inset:0;z-index:100001;background:rgba(2,6,23,.92);display:flex;align-items:center;justify-content:center;padding:16px';
+  L.innerHTML=`<div class="card p-4 w-full max-w-md"><h3 class="font-black mb-1">📷 Scan IMEI barcode</h3><p class="text-xs text-slate-400 mb-2">Point the camera at the barcode on the box label.</p><div id="scanBox2" class="rounded-xl overflow-hidden"></div><button type="button" class="btn b-sl w-full mt-3" onclick="closeImeiScan()">Cancel</button></div>`;
+  document.body.appendChild(L);
+  imeiScanner=new Html5Qrcode('scanBox2',{useBarCodeDetectorIfSupported:true,verbose:false});
+  imeiScanner.start({facingMode:'environment'},{fps:10,videoConstraints:{facingMode:'environment',width:{ideal:1280},height:{ideal:720}}},txt=>{
+    const raw=String(txt||'').trim(),d=raw.replace(/\D/g,''),val=/^\d{15}$/.test(d)?d:raw,ok=/^\d{15}$/.test(d)&&luhnOk(d);
+    closeImeiScan();const el=$(inputId);if(el)el.value=val;
+    if(units.some(x=>x.imei===val))return toast('That IMEI is already in stock',true);
+    toast(ok?'IMEI scanned ✅':'Scanned — please check the number',!ok);
+  },()=>{}).catch(e=>{$('scanBox2').innerHTML='<p class="text-xs text-rose-400 p-3">Camera unavailable: '+esc(e)+'. You can type the IMEI instead.</p>'});
+}
+function closeImeiScan(){const s=imeiScanner;imeiScanner=null;if(s)s.stop().then(()=>s.clear()).catch(()=>{});const L=document.getElementById('scanLayer');if(L)L.remove()}
 function stopScan(){if(scanner){const s=scanner;scanner=null;s.stop().then(()=>s.clear()).catch(()=>{})}}
 let camStream=null;
 function stopCam(){if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}}
@@ -565,7 +582,7 @@ function unitForm(id){
   <div><label class="lbl">Category</label><select id="uCat" class="inp">${['Pre-Owned','Brand New','Android','MacBook','iPad','Accessory'].map(x=>`<option ${x===u.category?'selected':''}>${x}</option>`).join('')}</select></div>
   <div><label class="lbl">Branch</label><select id="uBr" class="inp">${branches.map(b=>`<option value="${b.id}" ${b.id===u.branch_id?'selected':''}>${esc(b.name)}</option>`).join('')}</select></div>
   <div><label class="lbl">Storage</label><input id="uStor" class="inp" value="${esc(u.storage)}"></div><div><label class="lbl">Color</label><input id="uCol" type="color" class="inp h-9 p-1" value="${/^#[0-9a-f]{6}$/i.test(u.color||'')?u.color:'#10b981'}"></div>
-  <div class="col-span-2"><label class="lbl">Battery / condition</label><input id="uBh" class="inp" value="${esc(u.condition)}"></div><div class="col-span-2"><label class="lbl">IMEI / serial (unique)</label><input id="uImei" class="inp" value="${esc(u.imei)}"></div>
+  <div class="col-span-2"><label class="lbl">Battery / condition</label><input id="uBh" class="inp" value="${esc(u.condition)}"></div><div class="col-span-2"><label class="lbl">IMEI / serial (unique)</label><div class="flex gap-2"><input id="uImei" class="inp flex-1" inputmode="numeric" value="${esc(u.imei)}"><button type="button" class="btn b-em" onclick="scanImeiInto('uImei')">📷 Scan</button></div></div>
   <div><label class="lbl">Cash price ₱</label><input id="uPrice" type="number" class="inp" value="${u.price}"></div><div><label class="lbl">Reseller wholesale ₱</label><input id="uWh" type="number" class="inp" value="${u.wholesale??''}" placeholder="= cash price"></div>
   <div><label class="lbl">Capital ₱ (private)</label><input id="uCap" type="number" class="inp" value="${c.capital}"></div><div><label class="lbl">Supplier (private)</label><input id="uSup" class="inp" value="${esc(c.supplier)}"></div>
   <div><label class="lbl">RTO min. downpayment ₱</label><input id="uDp" type="number" class="inp" value="${u.rto_dp}"></div><div><label class="lbl">Installment total ₱ (RTO)</label><input id="uRtoP" type="number" class="inp" value="${u.rto_price??''}" placeholder="= cash price"></div><div><label class="lbl">Status</label><select id="uStat" class="inp">${['Available','Reserved','Sold','RTO'].map(x=>`<option ${x===u.status?'selected':''}>${x}</option>`).join('')}</select></div>
