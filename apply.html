@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Installment pre-application – MC Gadgets</title>
+<link rel="icon" href="assets/logo.svg"><link rel="stylesheet" href="css/app.css"></head>
+<body>
+<header class="top"><div class="wrap"><img src="assets/logo.svg" alt="" width="48" height="48"><div><h1>MC GADGETS</h1><p>Installment pre-application</p></div></div></header>
+<main class="wrap" style="padding-top:16px;max-width:560px">
+<p><a href="index.html">← Back to stock</a></p>
+<div id="unit" class="box"></div>
+<form id="f" class="box" style="margin-top:12px" hidden>
+  <p class="meta">This is a pre-application only. Approval is decided by the lender and is <b>not guaranteed</b>. Our staff will contact you.</p>
+  <label for="lender"><b>Lender</b></label><select id="lender" required></select>
+  <p id="req" class="meta"></p>
+  <label for="name"><b>Full name</b></label><input id="name" type="text" autocomplete="name" maxlength="80" required>
+  <label for="mobile"><b>Mobile number</b></label><input id="mobile" type="tel" inputmode="tel" autocomplete="tel" placeholder="09xx xxx xxxx" required>
+  <label for="income"><b>Source of income</b></label><input id="income" type="text" maxlength="120" placeholder="e.g. Employed at ..., Business owner, OFW remittance" required>
+  <label for="idfile"><b>Photo of a valid ID</b></label>
+  <input id="idfile" type="file" accept="image/jpeg,image/png,image/webp" required>
+  <p class="meta">JPG, PNG or WebP, up to 5 MB. Your ID is stored privately and only authorized staff can see it.</p>
+  <label class="chk"><input id="consent" type="checkbox"> <span>I agree that MC Gadgets may collect and use my name, number, income details and ID photo to process this application. See the <a href="privacy.html" target="_blank">privacy notice</a>.</span></label>
+  <div id="err" class="err" role="alert"></div>
+  <button class="btn" id="go" type="submit">Send application</button>
+</form>
+<div id="done" class="box ok" hidden>Thank you! We received your application. A staff member will contact you. Approval is subject to the lender.</div>
+</main>
+<script src="js/config.js"></script><script src="js/api.js"></script><script src="js/ui.js"></script>
+<script>
+(async function () {
+  const $ = id => document.getElementById(id);
+  const uid = new URLSearchParams(location.search).get('unit');
+  const box = $('unit');
+  let unit = null, lenders = [];
+  try {
+    if (uid) unit = await api.getUnit(uid);
+    lenders = await api.listLenders();
+  } catch (e) { /* handled below */ }
+  if (!unit || unit.status === 'sold') {
+    box.textContent = 'This unit is not available. Please pick another from the stock list.';
+    return;
+  }
+  box.replaceChildren(h('h3', null, unit.brand + ' ' + unit.model), h('div', 'meta', [unit.storage, unit.color].filter(Boolean).join(' · ')), h('div', { class: 'price' }, peso(unit.price)));
+  $('lender').replaceChildren(...lenders.map(l => h('option', { value: l.id }, l.name)));
+  const showReq = () => { const l = lenders.find(x => x.id === $('lender').value); $('req').textContent = l ? l.requirements : ''; };
+  $('lender').addEventListener('change', showReq); showReq();
+  $('f').hidden = false;
+  $('f').addEventListener('submit', async e => {
+    e.preventDefault(); $('err').textContent = ''; $('go').disabled = true;
+    try {
+      if (!$('consent').checked) throw new Error('Consent is required');
+      const path = await api.uploadId($('idfile').files[0]);
+      await api.apply({ p_unit: unit.id, p_lender: $('lender').value, p_name: $('name').value, p_mobile: $('mobile').value, p_income: $('income').value, p_id_path: path, p_consent: true });
+      $('f').hidden = true; $('done').hidden = false;
+    } catch (er) { $('err').textContent = friendly(er); $('go').disabled = false; }
+  });
+})();
+</script>
+</body></html>

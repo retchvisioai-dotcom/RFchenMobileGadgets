@@ -1,637 +1,84 @@
-<!DOCTYPE html>
-<html lang="en" class="dark">
+<!doctype html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="RF Chein Gadgets — live iPhone and gadget stock across 8 Negros branches, rent-to-own, swap calculator, warranty check and repair tracker.">
-<meta name="theme-color" content="#020617">
-<link rel="icon" type="image/png" href="assets/favicon.png">
-<title>RF Chein Gadgets — Live Stock, Rent-To-Own and Reseller Hub</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<script src="assets/js/shared.js"></script>
-<style>
-  body{font-family:'Plus Jakarta Sans',sans-serif;background:#020617;color:#f1f5f9}
-  .card{background:#0f172a;border:1px solid #1e293b;border-radius:16px}
-  .inp{width:100%;background:#020617;border:1px solid #1e293b;border-radius:10px;padding:.55rem .75rem;font-size:.8rem;color:#f1f5f9;outline:none}
-  .inp:focus{border-color:#10b981}
-  .btn{padding:.5rem .85rem;border-radius:10px;font-weight:800;font-size:.75rem;transition:.15s;display:inline-flex;align-items:center;gap:.4rem;justify-content:center;white-space:nowrap}
-  .btn:active{transform:scale(.97)}.btn:disabled{opacity:.5;pointer-events:none}
-  .b-em{background:#059669;color:#fff}.b-em:hover{background:#10b981}
-  .b-pu{background:#7c3aed;color:#fff}.b-pu:hover{background:#8b5cf6}
-  .b-sl{background:#1e293b;color:#e2e8f0}.b-sl:hover{background:#334155}
-  .b-am{background:#d97706;color:#fff}.b-rd{background:#be123c;color:#fff}
-  .on{background:#059669;color:#fff;box-shadow:0 1px 6px rgba(0,0,0,.4)}
-  .lbl{font-size:.65rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.2rem;display:block}
-  .pill{font-size:.62rem;font-weight:800;padding:.12rem .5rem;border-radius:999px}
-  #printArea{position:fixed;left:-99999px;top:0;background:#fff;color:#000}
-  @media print{body *{visibility:hidden}#printArea,#printArea *{visibility:visible}#printArea{left:0;position:absolute}}
-</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MC Gadgets – Quality gadgets, affordable prices</title>
+<meta name="description" content="MC Gadgets in Negros Occidental: iPhones (brand new and pre-owned), Android, laptops, printers and accessories. Live stock per branch.">
+<meta name="theme-color" content="#6d28d9">
+<link rel="icon" href="assets/logo.svg">
+<link rel="stylesheet" href="css/app.css">
 </head>
-<body class="min-h-screen pb-24">
+<body>
+<header class="top"><div class="wrap">
+  <img src="assets/logo.svg" alt="MC Gadgets logo" width="48" height="48">
+  <div><h1>MC GADGETS</h1><p id="tagline">Quality gadgets • Affordable prices • Trusted service</p></div>
+</div></header>
+<div id="promo" class="promo" hidden></div>
+<div id="sampleNote" class="sample" hidden>Showing SAMPLE stock for demonstration. Real stock and prices will replace it.</div>
 
-<header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-3 py-2.5">
-  <div class="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">
-    <div class="flex items-center gap-2.5">
-      <img src="assets/logo.png" alt="RF Chein Gadgets logo" class="w-10 h-10 rounded-full" width="40" height="40">
-      <div><h1 id="brandName" class="font-extrabold text-sm text-white leading-none">RF CHEIN GADGETS</h1><p id="brandTag" class="text-[10px] text-slate-400 mt-0.5"></p></div>
+<main class="wrap">
+  <section aria-label="Find a gadget">
+    <div class="filters">
+      <input id="q" type="search" placeholder="Search model, e.g. iPhone 14" aria-label="Search">
+      <select id="branch" aria-label="Branch"><option value="">All branches</option></select>
+      <select id="sort" aria-label="Sort">
+        <option value="new">Newest</option>
+        <option value="asc">Price: low to high</option>
+        <option value="desc">Price: high to low</option>
+      </select>
     </div>
-    <div class="flex items-center gap-2 max-w-full">
-      <div id="tabs" class="flex gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto"></div>
-      <button id="pwBtn" class="btn b-sl hidden" onclick="newPassModal()" title="Change password">🔑 Password</button>
-      <button id="authBtn" class="btn b-sl" onclick="authBtn()">Login</button>
+    <div class="chips" id="cats">
+      <button class="chip" data-c="" aria-pressed="true">All</button>
+      <button class="chip" data-c="iphone" aria-pressed="false">iPhone</button>
+      <button class="chip" data-c="android" aria-pressed="false">Android</button>
+      <button class="chip" data-c="laptop" aria-pressed="false">Laptops</button>
+      <button class="chip" data-c="printer" aria-pressed="false">Printers</button>
+      <button class="chip" data-c="accessory" aria-pressed="false">Accessories</button>
     </div>
-  </div>
-</header>
-<div id="promoBar" class="bg-emerald-950/60 border-b border-emerald-900/50 py-2 px-3 text-xs text-center text-emerald-300 font-medium flex justify-center items-center gap-3 flex-wrap"></div>
-<div id="frozenBanner" class="hidden bg-rose-700 text-center text-xs font-bold py-2">Staff terminal frozen by owner — sales disabled</div>
-<div id="loading" class="text-center text-slate-400 py-10 text-sm">Loading…</div>
+    <div id="count" class="meta" aria-live="polite"></div>
+    <div id="grid" class="grid"><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
+    <div id="empty" class="empty" hidden>No gadgets match. Try another branch or category.</div>
+    <div id="loadErr" class="err" role="alert"></div>
+  </section>
 
-<main class="max-w-7xl mx-auto p-3 sm:p-5">
-  <!-- PUBLIC -->
-  <section id="v-public" class="hidden space-y-5">
-    <img src="assets/banner.jpg" alt="Rent-to-own iPhones, as low as ₱3,500 downpayment" class="w-full rounded-2xl border border-emerald-500/20" loading="lazy">
-    <div class="rounded-2xl p-4 sm:p-5 border border-emerald-500/20 bg-gradient-to-r from-emerald-900/40 to-slate-900 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-      <div><span class="pill bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">BRANCH SELECTOR</span>
-        <h2 class="text-lg sm:text-xl font-black text-white mt-2">Find stock at your nearest branch</h2>
-        <p id="branchInfo" class="text-xs text-slate-300 mt-1"></p></div>
-      <select id="branchSel" class="inp md:w-72 font-bold" onchange="pubBranch=this.value;renderCatalog()"></select>
-    </div>
-    <div class="flex gap-1.5 flex-wrap" id="pubTabs"></div>
-    <div id="p-cat">
-      <div class="flex flex-wrap gap-2 mb-3">
-        <input id="cSearch" class="inp flex-1 min-w-[160px]" placeholder="Search model, color, storage…" oninput="renderCatalog()">
-        <select id="cSort" class="inp w-auto" onchange="renderCatalog()"><option value="new">Newest</option><option value="lo">Price ↑</option><option value="hi">Price ↓</option></select>
-        <select id="cCat" class="inp w-auto" onchange="renderCatalog()"><option value="">All types</option></select>
-      </div>
-      <div id="catalogGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"></div>
-    </div>
-    <div id="p-info" class="hidden space-y-4 max-w-4xl">
-      <div class="card p-4"><h3 class="font-black text-sm mb-2">📋 Installment Requirements <span class="pill bg-slate-800 text-slate-300">In-store only · no online installment</span></h3>
-        <ul class="text-xs text-slate-300 space-y-1 list-disc pl-4"><li>18–65 years old</li><li>Employed or a business owner</li><li>1 valid government ID (Driver's License, UMID, PRC, Passport, SSS, Postal, National ID)</li><li>Downpayment and proof of source of income</li><li>Active mobile number and active email</li><li>2 contact references (at least 1 co-worker if employed)</li></ul></div>
-      <div class="grid sm:grid-cols-2 gap-4">
-        <div class="card p-4"><h3 class="font-black text-sm mb-2">🛡️ Warranty</h3><ul class="text-xs text-slate-300 space-y-1 list-disc pl-4"><li>1-year service warranty + 1-month replacement</li><li>100% original, factory unlocked</li><li>Brand new sealed, or good-as-new pre-owned</li></ul></div>
-        <div class="card p-4"><h3 class="font-black text-sm mb-2">🚚 Delivery</h3><ul class="text-xs text-slate-300 space-y-1 list-disc pl-4"><li>Door-to-door via LBC</li><li>Same-day delivery within Bacolod</li></ul></div>
-      </div>
-      <div class="card p-4"><h3 class="font-black text-sm mb-2">🎁 Free Gift Box <span class="text-emerald-400">(about ₱4,000 value)</span></h3>
-        <p class="text-xs text-slate-300">Magnetic battery pack 5000mAh · magnetic wireless charger · 20W dual USB-C adapter · USB-C cable · AirPods-style earbuds · tempered glass · premium case · phone stand · hand lanyard</p></div>
-      <div class="card p-4"><h3 class="font-black text-sm mb-2">💳 Payment Methods</h3>
-        <p class="text-xs text-slate-300">Cash · GCash · Maya · Bank transfer (BPI, Metrobank, RCBC, Landbank, UnionBank, China Bank) · Credit card swipe · Lay-away · Swap / Upgrade · GGives · SPayLater · Skyro · Salmon · PalmPay · PayJoy · Home Credit · BillEase</p></div>
-      <div class="card p-4"><h3 class="font-black text-sm mb-2">📞 Contact</h3><div id="infoContact" class="text-xs text-slate-300 space-y-1"></div></div>
-    </div>
-    <div id="p-swap" class="hidden card p-4 max-w-xl">
-      <h3 class="font-black text-base mb-3">Swap / Trade-In Calculator</h3>
-      <div class="grid grid-cols-2 gap-3">
-        <div class="col-span-2"><label class="lbl">Your phone</label><select id="sModel" class="inp" onchange="calcSwap()"></select></div>
-        <div><label class="lbl">Storage</label><select id="sStor" class="inp" onchange="calcSwap()"><option value="-1500">64GB or less</option><option value="0" selected>128GB</option><option value="1500">256GB</option><option value="3000">512GB+</option></select></div>
-        <div><label class="lbl">Battery health</label><select id="sBat" class="inp" onchange="calcSwap()"><option value="-2500">Below 85%</option><option value="-1000">85–89%</option><option value="0" selected>90–94%</option><option value="1200">95%+</option></select></div>
-        <div class="col-span-2"><label class="lbl">Condition</label><select id="sCond" class="inp" onchange="calcSwap()"><option value="-3000">Cracked / Faulty</option><option value="-1000">Visible scratches</option><option value="0" selected>Good</option><option value="1500">Like new + box</option></select></div>
-        <div class="col-span-2"><label class="lbl">Upgrade to</label><select id="sTarget" class="inp" onchange="calcSwap()"></select></div>
-      </div>
-      <div class="mt-4 p-3 rounded-lg bg-slate-950 text-sm space-y-1">
-        <div class="flex justify-between"><span>Target price</span><b id="sTP"></b></div>
-        <div class="flex justify-between text-emerald-400"><span>Est. trade-in</span><b id="sTV"></b></div>
-        <div class="flex justify-between text-base border-t border-slate-800 pt-1"><span>Cash top-up</span><b id="sTU" class="text-amber-300"></b></div></div>
-      <button class="btn b-em w-full mt-3" onclick="sendSwap()">💬 Send quote via Messenger</button>
-      <p class="text-[11px] text-slate-500 mt-2">Estimate only — final value after in-store inspection.</p>
-    </div>
-    <div id="p-war" class="hidden card p-4 max-w-xl">
-      <h3 class="font-black text-base mb-3">Digital Warranty & IMEI Check</h3>
-      <div class="flex gap-2"><input id="wIMEI" class="inp" placeholder="Enter IMEI / serial" onkeydown="if(event.key==='Enter')checkWarranty()"><button class="btn b-em" onclick="checkWarranty()">Verify</button></div>
-      <div id="wResult" class="mt-3"></div>
-    </div>
-    <div id="p-rep" class="hidden card p-4 max-w-xl">
-      <h3 class="font-black text-base mb-1">🛠️ Repair & Tech Service Tracker</h3>
-      <p class="text-xs text-slate-400 mb-3">Enter your job order number and the last 4 digits of the phone number you gave us.</p>
-      <div class="grid grid-cols-3 gap-2"><input id="trJob" class="inp col-span-2" placeholder="RF-REP-801"><input id="trPh" class="inp" maxlength="4" inputmode="numeric" placeholder="Last 4"></div>
-      <button class="btn b-em w-full mt-2" onclick="trackRepair()">Track status</button><div id="trOut" class="mt-3 text-xs"></div>
+  <section id="installment">
+    <h2>Installment, walk-in</h2>
+    <div class="box">
+      <p>Want a gadget on installment? Visit any open branch with the requirements below. All installment is <b>subject to approval</b> by the lender.</p>
+      <div id="lenders" class="cols"></div>
     </div>
   </section>
 
-  <!-- RESELLER -->
-  <section id="v-reseller" class="hidden space-y-5"></section>
-  <!-- POS -->
-  <section id="v-pos" class="hidden space-y-4"></section>
-  <!-- VAULT -->
-  <section id="v-vault" class="hidden space-y-4"></section>
+  <section id="branches">
+    <h2>Our branches</h2>
+    <div id="branchList" class="cols"></div>
+  </section>
 </main>
 
-<div id="modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-3" onclick="if(event.target===this)closeModal()">
-  <div class="card w-full max-w-lg max-h-[92vh] overflow-y-auto p-4 border-emerald-500/30" id="modalBody"></div>
-</div>
-<div id="toast" class="hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-xl text-xs font-bold shadow-xl"></div>
-<div id="printArea"></div>
+<footer><div class="wrap">
+  <p id="contact"></p>
+  <p><a href="check.html">Warranty &amp; repair check</a> · <a href="privacy.html">Data privacy notice</a></p>
+  <p id="slogan"></p>
+  <p>Developed by Retch Pornes</p>
+</div></footer>
 
-<script>
-const sb=supabase.createClient('https://kuinykivbhmzelwibzjm.supabase.co','sb_publishable_43nmIW6M6W8D2b53cLfhbA_S52GDAMm');
-const {peso,$,esc,fmt,fdate,ftime,dayOf,today,num,resizeImage,dl,csv}=RFGShared;
-const PUB='id,model,category,storage,condition,price,status,color,notes,photo_url,added_at,branch_id,rto_dp,held_until';
-const STATUSES=['Received','Diagnosing','Waiting Parts','Repairing','Testing','Ready for Pickup','Released'];
+<dialog id="dlg">
+  <form method="dialog" id="rform">
+    <h2 id="rtitle">Reserve</h2>
+    <p class="meta">We hold this unit for 24 hours for in-store pickup. Pay at the branch.</p>
+    <label for="rname">Your name</label>
+    <input id="rname" type="text" autocomplete="name" required maxlength="80">
+    <label for="rmobile">Mobile number</label>
+    <input id="rmobile" type="tel" inputmode="tel" autocomplete="tel" placeholder="09xx xxx xxxx" required>
+    <label class="chk"><input id="rconsent" type="checkbox"> <span>I agree that MC Gadgets may use my name and number to hold this unit and contact me. See the <a href="privacy.html" target="_blank">privacy notice</a>.</span></label>
+    <div id="rerr" class="err" role="alert"></div>
+    <div style="display:flex;gap:8px"><button class="btn" id="rgo" type="submit">Reserve</button><button class="btn alt" id="rcancel" type="button">Close</button></div>
+  </form>
+</dialog>
 
-let S={name:'RF CHEIN GADGETS',email:'',tag:'',address:'',phone:'',messenger:'',facebook:'',promo:'',frozen:false,hold_hours:2,rto_months:3};
-let branches=[],payAcc=[],units=[],costs={},sales=[],saleCosts={},swaps=[],audit=[],staffList=[],resellers=[],holds=[],payouts=[],contracts=[],cpays=[],repairs=[];
-let rCat=[],myHolds=[],meR=null;
-let session=null,role=null,view='public',ptab='cat',pubBranch='',vtab='dash',ptab2='sell',cart=[],cartHold=null,posBranch='';
-
-/* ---------- utils ---------- */
-function toast(m,bad){const t=$('toast');t.textContent=m;t.className='fixed bottom-5 left-1/2 -translate-x-1/2 z-[60] px-4 py-2 rounded-xl text-xs font-bold shadow-xl '+(bad?'bg-rose-600':'bg-emerald-600');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.add('hidden'),3200)}
-const err=e=>toast(e?.message||String(e),true);
-function openModal(h){$('modalBody').innerHTML=h;$('modal').classList.remove('hidden')}
-function closeModal(){$('modal').classList.add('hidden');stopCam();stopScan()}
-function copyText(t){if(navigator.clipboard)return navigator.clipboard.writeText(t).catch(fb);fb();function fb(){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}}
-const bname=id=>branches.find(b=>b.id===id)?.name||'—';
-const avail=()=>units.filter(u=>u.status==='Available'&&!(u.held_until&&new Date(u.held_until)>new Date()));
-const profit=s=>num(s.price)-num(s.discount)-num(saleCosts[s.id])-num(s.commission);
-const net=s=>num(s.price)-num(s.discount);
-function phoneImg(u){
-  if(u.photo_url)return `<img loading="lazy" src="${esc(u.photo_url)}" alt="${esc(u.model)}" class="w-full h-full object-cover">`;
-  const c=/^#[0-9a-f]{3,8}$/i.test(u.color||'')?u.color:'#10b981',lap=u.category==='MacBook'||u.category==='iPad';
-  return `<svg viewBox="0 0 100 100" class="w-full h-full" style="background:linear-gradient(135deg,#0f172a,#020617)">${lap?`<rect x="18" y="26" width="64" height="40" rx="3" fill="${c}" stroke="#94a3b8"/><rect x="10" y="68" width="80" height="5" rx="2" fill="#94a3b8"/>`:`<rect x="33" y="10" width="34" height="80" rx="7" fill="${c}" stroke="#94a3b8" stroke-width="1.5"/><rect x="36" y="15" width="28" height="70" rx="3" fill="#0b1220"/><circle cx="41" cy="22" r="3" fill="#334155"/><circle cx="48" cy="22" r="3" fill="#334155"/>`}</svg>`;
-}
-function printHTML(html,width){const p=$('printArea');p.style.width=width||'80mm';p.innerHTML=html;setTimeout(()=>window.print(),50)}
-
-/* ---------- data ---------- */
-async function loadPublic(){
-  const [st,br,pa,un]=await Promise.all([sb.from('mcg_settings').select('*').eq('id',1).single(),sb.from('mcg_branches').select('*').eq('active',true).order('sort'),sb.from('mcg_pay_accounts').select('*').eq('active',true).order('id'),
-    sb.from('mcg_units').select(role?'*':PUB).order('added_at',{ascending:false}).limit(2000)]);
-  if(st.data)S=st.data;branches=br.data||[];payAcc=pa.data||[];if(un.data)units=un.data;
-}
-async function loadPrivate(){
-  if(role){
-    const q=[sb.from('mcg_sales').select('*').order('created_at',{ascending:false}).limit(1000),sb.from('mcg_swaps').select('*').order('created_at',{ascending:false}).limit(200),
-      sb.from('mcg_contracts').select('*').order('created_at',{ascending:false}).limit(500),sb.from('mcg_contract_payments').select('*').order('paid_at',{ascending:false}).limit(3000),
-      sb.from('mcg_repairs').select('*').order('created_at',{ascending:false}).limit(500),sb.from('mcg_holds').select('*').eq('status','Active').gt('expires_at',new Date().toISOString()),sb.from('mcg_resellers').select('*').order('created_at')];
-    if(role==='owner')q.push(sb.from('mcg_unit_costs').select('*'),sb.from('mcg_sale_costs').select('*'),sb.from('mcg_audit').select('*').order('at',{ascending:false}).limit(300),sb.from('mcg_staff').select('*').order('created_at'),sb.from('mcg_payouts').select('*').order('created_at',{ascending:false}).limit(500));
-    const r=await Promise.all(q);
-    sales=r[0].data||[];swaps=r[1].data||[];contracts=r[2].data||[];cpays=r[3].data||[];repairs=r[4].data||[];holds=r[5].data||[];resellers=r[6].data||[];
-    if(role==='owner'){costs={};(r[7].data||[]).forEach(c=>costs[c.unit_id]=c);saleCosts={};(r[8].data||[]).forEach(c=>saleCosts[c.sale_id]=c.capital);audit=r[9].data||[];staffList=r[10].data||[];payouts=r[11].data||[]}
-  }
-  if(meR?.active){
-    const [c,h,p]=await Promise.all([sb.rpc('mcg_reseller_catalog'),sb.rpc('mcg_my_holds'),sb.from('mcg_payouts').select('*').order('created_at',{ascending:false}).limit(200)]);
-    rCat=c.data||[];myHolds=h.data||[];if(role!=='owner')payouts=p.data||[];else payouts=payouts;
-  }
-}
-async function refresh(quiet){try{await loadPublic();await loadPrivate()}catch(e){if(!quiet)err(e)}render()}
-async function resolveRole(){
-  role=null;meR=null;
-  if(session){
-    const [r,m]=await Promise.all([sb.rpc('mcg_role'),sb.from('mcg_resellers').select('*').eq('user_id',session.user.id).maybeSingle()]);
-    role=r.data||null;meR=m.data||null;
-  }
-  if(view==='vault'&&role!=='owner')view='public';
-  if(view==='pos'&&!role)view='public';
-  if(view==='reseller'&&!(role||meR))view='public';
-}
-async function initAuth(){
-  const {data}=await sb.auth.getSession();session=data.session;
-  sb.auth.onAuthStateChange((_e,s)=>{session=s;setTimeout(async()=>{await resolveRole();await refresh(true);if(_e==='PASSWORD_RECOVERY')newPassModal()},0)});
-  await resolveRole();
-}
-
-/* ---------- shell ---------- */
-function setView(v){
-  if(v==='reseller'&&!(role||meR?.active)){if(!session)return loginModal('up',true);return accountModal()}
-  view=v;render();window.scrollTo(0,0);
-}
-function render(){
-  $('loading').classList.add('hidden');
-  $('brandName').textContent=S.name;$('brandTag').textContent=S.tag||'';document.title=S.name+' — Live Stock, Rent-To-Own & Reseller Hub';
-  $('promoBar').innerHTML=(S.promo?`<span>🔥 <b>Promo:</b> ${esc(S.promo)}</span>`:'')+`<button onclick="payModal()" class="bg-emerald-500 text-slate-950 font-extrabold px-3 py-1 rounded-md text-[11px]">🛡️ Verify Official Payment Accounts</button>`;
-  $('frozenBanner').classList.toggle('hidden',!(S.frozen&&role));
-  const T=[['public','🌐 Public']];T.push(['reseller','🤝 Reseller Hub']);if(role)T.push(['pos','🏪 Staff POS']);if(role==='owner')T.push(['vault','👑 Owner Vault']);
-  const pend=swaps.filter(s=>s.status==='Pending').length+resellers.filter(r=>!r.active).length+payouts.filter(p=>p.status==='Pending'&&num(p.amount)>0).length;
-  $('tabs').innerHTML=T.map(([k,n])=>`<button class="btn ${k===view?'on':'text-slate-400'}" onclick="setView('${k}')">${n}${k==='vault'&&pend?` <span class="pill bg-rose-500 text-white">${pend}</span>`:''}</button>`).join('');
-  $('pwBtn').classList.toggle('hidden',!session);
-  $('authBtn').textContent=role||meR?'Logout':session?'Account':'Staff / Reseller login';
-  ['public','reseller','pos','vault'].forEach(k=>$('v-'+k).classList.toggle('hidden',k!==view));
-  if(view==='public')renderPublic();if(view==='reseller')renderReseller();if(view==='pos')renderPos();if(view==='vault')renderVault();
-}
-
-/* ---------- auth ---------- */
-function authBtn(){if(role||meR){sb.auth.signOut();toast('Logged out')}else if(session)accountModal();else loginModal()}
-function loginModal(mode='in',reseller){
-  openModal(`<h3 class="font-black text-base mb-1">${mode==='in'?'Sign in':'Create account'}</h3><p class="text-xs text-slate-400 mb-3">${reseller?'Create an account, then request reseller access. ':''}For staff and resellers only — customers don't need an account.</p>
-  <div class="space-y-2"><div><label class="lbl">Email</label><input id="aEmail" type="email" class="inp" autocomplete="email"></div>
-  <div><label class="lbl">Password (8+ characters)</label><input id="aPass" type="password" class="inp" autocomplete="${mode==='in'?'current-password':'new-password'}" onkeydown="if(event.key==='Enter')doAuth('${mode}')"></div></div>
-  <button id="aGo" class="btn b-em w-full mt-3" onclick="doAuth('${mode}')">${mode==='in'?'Sign in':'Sign up'}</button>
-  <button class="text-xs text-emerald-400 mt-3 w-full" onclick="loginModal('${mode==='in'?'up':'in'}')">${mode==='in'?'No account yet? Sign up':'Have an account? Sign in'}</button>
-  ${mode==='in'?`<button class="text-xs text-slate-400 mt-2 w-full" onclick="forgotModal()">Forgot password?</button>`:''}`);
-}
-function forgotModal(){
-  openModal(`<h3 class="font-black text-base mb-1">Reset password</h3><p class="text-xs text-slate-400 mb-3">Enter your account email. We will send you a link to choose a new password.</p>
-  <div><label class="lbl">Email</label><input id="fEmail" type="email" class="inp" autocomplete="email" onkeydown="if(event.key==='Enter')sendReset()"></div>
-  <button id="fGo" class="btn b-em w-full mt-3" onclick="sendReset()">Send reset link</button>
-  <button class="text-xs text-slate-400 mt-3 w-full" onclick="loginModal('in')">Back to sign in</button>`);
-}
-async function sendReset(){
-  const email=$('fEmail').value.trim();if(!email)return toast('Enter your email',true);
-  $('fGo').disabled=true;
-  const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
-  $('fGo').disabled=false;if(error)return err(error);
-  openModal(`<h3 class="font-black mb-2">Check your email</h3><p class="text-sm text-slate-300">If <b>${esc(email)}</b> has an account, a reset link is on its way. Open it on this device, then choose a new password.</p><button class="btn b-sl w-full mt-3" onclick="closeModal()">Close</button>`);
-}
-function newPassModal(){
-  openModal(`<h3 class="font-black text-base mb-1">Choose a new password</h3><p class="text-xs text-slate-400 mb-3">At least 8 characters. Use something only you know.</p>
-  <div class="space-y-2"><div><label class="lbl">New password</label><input id="npA" type="password" class="inp" autocomplete="new-password"></div>
-  <div><label class="lbl">Repeat new password</label><input id="npB" type="password" class="inp" autocomplete="new-password" onkeydown="if(event.key==='Enter')saveNewPass()"></div></div>
-  <button id="npGo" class="btn b-em w-full mt-3" onclick="saveNewPass()">Save password</button>`);
-}
-async function saveNewPass(){
-  const a=$('npA').value,b=$('npB').value;
-  if(a.length<8)return toast('Password must be 8+ characters',true);
-  if(a!==b)return toast('Passwords do not match',true);
-  $('npGo').disabled=true;
-  const {error}=await sb.auth.updateUser({password:a});
-  $('npGo').disabled=false;if(error)return err(error);
-  closeModal();toast('Password updated');
-}
-async function doAuth(mode){
-  const email=$('aEmail').value.trim(),password=$('aPass').value;if(!email||password.length<8)return toast('Enter email and a password of 8+ characters',true);
-  $('aGo').disabled=true;
-  const r=mode==='in'?await sb.auth.signInWithPassword({email,password}):await sb.auth.signUp({email,password});
-  $('aGo').disabled=false;if(r.error)return err(r.error);
-  if(mode==='up'&&!r.data.session){return openModal(`<h3 class="font-black mb-2">Check your email</h3><p class="text-sm text-slate-300">We sent a confirmation link to <b>${esc(email)}</b>. Confirm it, then sign in here.</p><button class="btn b-sl w-full mt-3" onclick="loginModal('in')">Go to sign in</button>`)}
-  closeModal();await resolveRole();if(!role&&!meR?.active)accountModal();else{toast('Welcome!');await refresh()}
-}
-async function accountModal(){
-  const {data:me}=await sb.from('mcg_staff').select('*').eq('user_id',session.user.id).maybeSingle();
-  if((me&&!me.active)||(meR&&!meR.active))return openModal(`<h3 class="font-black mb-2">Waiting for approval</h3><p class="text-sm text-slate-300">Your request for <b>${esc(session.user.email)}</b> was sent. The owner must approve it first.</p><div class="flex gap-2 mt-3"><button class="btn b-sl flex-1" onclick="closeModal();resolveRole().then(()=>refresh())">Check again</button><button class="btn b-rd" onclick="sb.auth.signOut();closeModal()">Logout</button></div>`);
-  openModal(`<h3 class="font-black mb-1">Signed in as ${esc(session.user.email)}</h3><p class="text-xs text-slate-400 mb-3">Choose how you'll use this account.</p>
-  <div class="card p-3 mb-2"><b class="text-sm">🤝 I'm a reseller</b><input id="rqName" class="inp mt-2" placeholder="Your name / page name"><input id="rqGc" class="inp mt-2" placeholder="Your GCash number (for commission payouts)"><button class="btn b-pu w-full mt-2" onclick="reqReseller()">Request reseller access</button></div>
-  <div class="card p-3 mb-2"><b class="text-sm">🏪 I'm a branch cashier</b><input id="reqName" class="inp mt-2" placeholder="Your name"><button class="btn b-em w-full mt-2" onclick="reqStaff()">Request staff access</button></div>
-  <details class="card p-3"><summary class="text-sm font-bold cursor-pointer">👑 Owner first-time setup</summary><input id="ownCode" class="inp mt-2" placeholder="Setup code"><button class="btn b-am w-full mt-2" onclick="claimOwner()">Claim owner account</button></details>
-  <button class="btn b-sl w-full mt-3" onclick="sb.auth.signOut();closeModal()">Logout</button>`);
-}
-async function reqStaff(){const {error}=await sb.rpc('mcg_request_access',{p_name:$('reqName').value.trim()});if(error)return err(error);accountModal()}
-async function reqReseller(){const n=$('rqName').value.trim();if(!n)return toast('Enter your name',true);const {error}=await sb.rpc('mcg_request_reseller',{p_name:n,p_gcash:$('rqGc').value.trim()});if(error)return err(error);await resolveRole();accountModal()}
-async function claimOwner(){const {error}=await sb.rpc('mcg_claim_owner',{p_code:$('ownCode').value.trim()});if(error)return err(error);closeModal();await resolveRole();toast('Owner account ready. Default PIN is 1234 — change it in Settings!');view='vault';vtab='set';await refresh()}
-function payModal(){
-  openModal(`<div class="flex justify-between items-center mb-2"><h3 class="font-extrabold text-base">🛡️ Official ${esc(S.name)} Payment Accounts</h3><button onclick="closeModal()" class="text-slate-400">✕</button></div>
-  <p class="text-xs text-slate-300 mb-3">To avoid scammers pretending to be our agents, pay ONLY to the accounts listed here — or in person at a branch.</p>
-  ${payAcc.map(a=>`<div class="bg-slate-950 p-3 rounded-xl border border-slate-800 mb-2 flex justify-between items-center text-xs"><div><span class="text-slate-400 font-bold block">${esc(a.kind)} ${esc(a.label)}</span><strong class="text-white text-sm">${esc(a.number)}</strong><span class="text-emerald-400 block">${esc(a.account_name)}</span></div><span class="pill bg-emerald-500/10 text-emerald-400">VERIFIED ✅</span></div>`).join('')||'<div class="text-xs text-slate-400 bg-slate-950 p-3 rounded-xl">No online accounts are listed yet. Please pay in person at a branch, or message our official Facebook page to confirm payment details.</div>'}
-  <button class="btn b-em w-full mt-2" onclick="closeModal()">Understood</button>`);
-}
-
-/* ---------- public ---------- */
-function pubTab(t){ptab=t;renderPublic()}
-function renderPublic(){
-  const sel=$('branchSel');sel.innerHTML=`<option value="">📍 All branches</option>`+branches.map(b=>`<option value="${b.id}">📍 ${esc(b.name)}</option>`).join('');sel.value=pubBranch;
-  const b=branches.find(x=>String(x.id)===String(pubBranch));$('branchInfo').textContent=b?`${b.address} • ${b.hours}`:S.address||'';
-  $('pubTabs').innerHTML=[['cat','📱 Live Stock'],['swap','🔄 Swap Calculator'],['war','🛡️ Warranty Check'],['rep','🛠️ Repair Tracker'],['info','📋 How to Buy']].map(([k,n])=>`<button class="btn ${k===ptab?'on':'b-sl'}" onclick="pubTab('${k}')">${n}</button>`).join('');
-  ['cat','swap','war','rep','info'].forEach(k=>$('p-'+k).classList.toggle('hidden',k!==ptab));
-  if(ptab==='info')renderInfo();if(ptab==='cat')renderCatalog();if(ptab==='swap'){fillSwapSelects();calcSwap()}
-}
-function renderInfo(){const wa=(S.phone||'').replace(/\D/g,'').replace(/^0/,'63');$('infoContact').innerHTML=`<div>📱 <a class="text-emerald-400" href="tel:${esc((S.phone||'').replace(/\s/g,''))}">${esc(S.phone)}</a> · <a class="text-emerald-400" href="https://wa.me/${wa}" target="_blank" rel="noopener">WhatsApp +${wa}</a></div>${S.email?`<div>✉️ <a class="text-emerald-400" href="mailto:${esc(S.email)}">${esc(S.email)}</a></div>`:''}${S.facebook?`<div>👍 <a class="text-emerald-400" href="${esc(S.facebook)}" target="_blank" rel="noopener">Facebook page</a></div>`:''}<div>🏬 Main: ${esc(S.address)}</div><div class="text-slate-500">CEO: Reychelle Faith Macabales Abelida</div>`}
-function renderCatalog(){
-  const q=($('cSearch').value||'').toLowerCase(),sort=$('cSort').value,cats=[...new Set(avail().map(u=>u.category))],cv=$('cCat').value;
-  $('cCat').innerHTML='<option value="">All types</option>'+cats.map(c=>`<option ${c===cv?'selected':''}>${esc(c)}</option>`).join('');
-  let list=avail().filter(u=>(!pubBranch||String(u.branch_id)===String(pubBranch))&&(!cv||u.category===cv)&&(u.model+' '+u.storage+' '+u.notes+' '+u.condition).toLowerCase().includes(q));
-  list.sort((a,b)=>sort==='lo'?a.price-b.price:sort==='hi'?b.price-a.price:new Date(b.added_at)-new Date(a.added_at));
-  $('catalogGrid').innerHTML=list.map(u=>`<div class="card overflow-hidden flex flex-col">
-   <div class="h-44 relative cursor-pointer" onclick="viewUnit('${u.id}')">${phoneImg(u)}<span class="pill absolute top-2 left-2 ${u.category==='Brand New'?'bg-emerald-500 text-slate-950':'bg-slate-700 text-white'}">${esc(u.category)}</span><span class="pill absolute top-2 right-2 bg-slate-950/80 text-slate-200">${esc(bname(u.branch_id))}</span></div>
-   <div class="p-3 flex-1 flex flex-col"><div class="font-extrabold text-sm leading-tight">${esc(u.model)}</div><div class="text-[11px] text-slate-400 mt-1">${esc(u.storage)} • ${esc(u.condition)}</div><div class="text-[11px] text-slate-500 mt-1">${esc(u.notes)}</div>
-   <div class="bg-slate-950 rounded-xl border border-slate-800 p-2 mt-2 flex justify-between items-center"><div><span class="text-[9px] text-slate-400 font-bold block">RENT-TO-OWN</span><b class="text-emerald-400 text-sm">${peso(u.rto_dp)} DP</b></div><div class="text-right"><span class="text-[9px] text-slate-400 font-bold block">CASH</span><b class="text-white text-sm">${peso(u.price)}</b></div></div>
-   <div class="mt-2 flex gap-1.5"><button class="btn b-em flex-1" onclick="reserve('${u.id}')">💬 Inquire</button><button class="btn b-sl" onclick="reserve('${u.id}',true)" title="Rent-to-own">RTO</button><button class="btn b-sl" onclick="calcFor('${u.id}')" title="Swap">🔄</button></div></div></div>`).join('')
-   ||'<div class="text-slate-400 col-span-full text-center py-10 text-sm">No units match right now. Message us for incoming stock!</div>';
-}
-function viewUnit(id){const u=units.find(x=>x.id===id);if(!u)return;openModal(`<div class="h-64 rounded-xl overflow-hidden mb-3">${phoneImg(u)}</div><h3 class="font-black text-lg">${esc(u.model)}</h3><p class="text-sm text-slate-400">${esc(u.storage)} • ${esc(u.condition)} • ${esc(bname(u.branch_id))}</p><p class="text-sm mt-2">${esc(u.notes)}</p><div class="flex justify-between items-end my-3"><div><span class="lbl">Rent-to-own</span><b class="text-emerald-400 text-lg">${peso(u.rto_dp)} DP</b></div><div class="text-right"><span class="lbl">Cash</span><b class="text-2xl text-amber-300">${peso(u.price)}</b></div></div><div class="flex gap-2"><button class="btn b-em flex-1" onclick="reserve('${u.id}')">Inquire via Messenger</button><button class="btn b-sl" onclick="closeModal()">Close</button></div>`)}
-function msgModal(msg){
-  const link=S.messenger?`<a class="btn b-em flex-1" target="_blank" rel="noopener" href="${esc(S.messenger)}" onclick="copyText($('msgTxt').value)">Copy & open Messenger</a>`:'';
-  openModal(`<h3 class="font-black mb-2">Message preview</h3><textarea id="msgTxt" rows="9" class="inp">${esc(msg)}</textarea><div class="flex gap-2 mt-3">${link}<button class="btn b-sl flex-1" onclick="copyText($('msgTxt').value);toast('Copied — paste in Messenger')">Copy</button><button class="btn b-sl" onclick="closeModal()">Close</button></div>`);
-}
-function reserve(id,rto){const u=units.find(x=>x.id===id);msgModal(`Hi ${S.name}! 👋\n\n${rto?'I want to apply for RENT-TO-OWN on':'I want to inquire about'}:\n📱 ${u.model} (${u.storage})\n🔋 ${u.condition}\n💵 Cash ${peso(u.price)}${rto?` • DP ${peso(u.rto_dp)}`:''}\n📍 ${bname(u.branch_id)}\n\nAvailable pa po?`)}
-function fillSwapSelects(){
-  const sm=$('sModel');if(!sm.options.length)[['iPhone 11',11500],['iPhone 12',15500],['iPhone 13',20500],['iPhone 14',27000],['iPhone 14 Pro Max',36000],['iPhone 15',33000],['iPhone 15 Pro Max',52000],['iPhone 16',40000],['Samsung S22/S23',16000],['Other phone',6000]].forEach(([n,v])=>sm.add(new Option(n+' — base '+peso(v),v)));
-  const keep=$('sTarget').value;$('sTarget').innerHTML=avail().map(u=>`<option value="${u.id}">${esc(u.model)} — ${peso(u.price)}</option>`).join('');if(keep)$('sTarget').value=keep;
-}
-function calcSwap(){const tv=Math.max(2500,(+$('sModel').value||0)+ +$('sStor').value+ +$('sBat').value+ +$('sCond').value),u=units.find(x=>x.id===$('sTarget').value),tp=u?u.price:0;$('sTP').textContent=peso(tp);$('sTV').textContent='− '+peso(tv);$('sTU').textContent=peso(Math.max(0,tp-tv));return {tv,u,top:Math.max(0,tp-tv)}}
-function calcFor(id){pubTab('swap');fillSwapSelects();$('sTarget').value=id;calcSwap();window.scrollTo(0,0)}
-function sendSwap(){const r=calcSwap();if(!r.u)return toast('No unit selected',true);const m=$('sModel');msgModal(`Hi ${S.name}! 🔄\n\nSwap quote:\n📲 My phone: ${m.options[m.selectedIndex].text.split(' — ')[0]}\n🎯 Upgrade to: ${r.u.model}\n💰 Est. trade-in: ${peso(r.tv)}\n💵 Est. top-up: ${peso(r.top)}\n📍 ${bname(r.u.branch_id)}\n\nCan I come in for inspection?`)}
-async function checkWarranty(){
-  const k=$('wIMEI').value.trim(),box=$('wResult');if(!k){box.innerHTML='';return}
-  const {data,error}=await sb.rpc('mcg_check_warranty',{p_imei:k});if(error)return err(error);const w=data&&data[0];
-  if(!w){box.innerHTML='<div class="p-3 rounded-lg bg-rose-900/40 border border-rose-500/40 text-sm"><b>No record found.</b> Check the IMEI or contact the store.</div>';return}
-  const left=Math.ceil((new Date(w.expires_at)-new Date())/864e5);
-  box.innerHTML=`<div class="p-3 rounded-lg border text-sm space-y-1 ${w.active?'bg-emerald-900/30 border-emerald-500/40':'bg-amber-900/30 border-amber-500/40'}"><div class="font-black ${w.active?'text-emerald-300':'text-amber-300'}">${w.active?'✅ ACTIVE WARRANTY — '+left+' day(s) left':'⚠ WARRANTY EXPIRED'}</div><div>${esc(w.model)}</div><div class="text-slate-400">Buyer: ${esc(w.buyer_masked)}</div><div class="text-slate-400">Purchased ${fdate(w.purchased_at)} • Valid until ${fdate(w.expires_at)}</div></div>`;
-}
-async function trackRepair(){
-  const {data,error}=await sb.rpc('mcg_track_repair',{p_job:$('trJob').value,p_phone4:$('trPh').value});if(error)return err(error);const r=data&&data[0];
-  $('trOut').innerHTML=r?`<div class="bg-slate-950 p-3 rounded-xl border border-slate-800"><b>${esc(r.job_no)}</b> — ${esc(r.device)}<br>Status: <span class="text-emerald-400 font-bold">🛠️ ${esc(r.status)}</span>${r.public_note?`<br><span class="text-slate-300">${esc(r.public_note)}</span>`:''}<br><span class="text-slate-500">Updated ${fmt(r.updated_at)} • ${esc(r.branch||'')}</span></div>`:'<span class="text-rose-400">No matching job. Check the job number and last 4 digits of your phone.</span>';
-}
-
-/* ---------- reseller hub ---------- */
-function resCaption(u,srp){
-  const stealth=meR.stealth;return `📱 ${u.model} ${u.storage||''}\n🔋 ${u.condition||''}\n${u.notes?u.notes+'\n':''}💰 ${peso(srp)}\n${stealth?'✅ Brand new / verified unit':'✅ Authorized stock — '+S.name}\n📩 PM for details`;
-}
-function renderReseller(){
-  const box=$('v-reseller');
-  if(!meR){box.innerHTML=`<div class="card p-6 text-center max-w-md mx-auto"><h2 class="font-black text-lg mb-2">Reseller Hub</h2><p class="text-sm text-slate-400 mb-3">Reseller accounts are approved by the owner.</p><button class="btn b-pu" onclick="accountModal()">Request reseller access</button></div>`;return}
-  if(!meR.active){box.innerHTML=`<div class="card p-6 text-center max-w-md mx-auto"><h2 class="font-black text-lg mb-2">Awaiting approval</h2><p class="text-sm text-slate-400">The owner will approve your reseller account shortly.</p></div>`;return}
-  const mk=num(meR.markup),pend=payouts.filter(p=>p.reseller_id===meR.user_id&&p.status==='Pending').reduce((a,p)=>a+num(p.amount),0),paid=payouts.filter(p=>p.reseller_id===meR.user_id&&p.status==='Paid').reduce((a,p)=>a+num(p.amount),0);
-  const mine=new Set(myHolds.filter(h=>h.status==='Active').map(h=>h.unit_id));
-  box.innerHTML=`<div class="rounded-2xl p-4 border border-purple-500/20 bg-gradient-to-r from-purple-950/40 to-slate-900"><span class="pill bg-purple-500/10 text-purple-400 border border-purple-500/20">RESELLER PORTAL</span><h2 class="text-lg sm:text-xl font-black mt-2">Auto-Patong & ${S.hold_hours}-Hour IMEI Hold</h2><p class="text-xs text-slate-300 mt-1">Set your markup, copy a ready-to-post caption, and lock a unit for ${S.hold_hours} hours while your buyer comes to the counter. You earn your markup as commission.</p></div>
-  <div class="card p-4 grid md:grid-cols-4 gap-4">
-    <div><label class="lbl">Reseller code</label><div class="font-mono text-sm bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5">${esc(meR.code||'—')}</div></div>
-    <div><label class="lbl">Your markup: <b id="mkOut" class="text-emerald-400">+${peso(mk)}</b></label><input id="mkSlider" type="range" min="500" max="4000" step="500" value="${mk}" class="w-full accent-emerald-500 mt-2" oninput="$('mkOut').textContent='+₱'+Number(this.value).toLocaleString()" onchange="setMarkup(this.value)"></div>
-    <div class="flex items-end"><button class="btn b-sl w-full py-3" onclick="toggleStealth()">🕶️ Stealth mode: <b class="${meR.stealth?'text-emerald-400':'text-rose-400'}">${meR.stealth?'ON':'OFF'}</b></button></div>
-    <div><label class="lbl">Earnings</label><div class="text-xs"><b class="text-amber-300">${peso(pend)}</b> pending • <b class="text-emerald-400">${peso(paid)}</b> paid</div></div></div>
-  ${myHolds.some(h=>h.status==='Active')?`<div class="card p-4"><h3 class="font-extrabold text-sm mb-2">⏱️ My active holds</h3><div class="space-y-2">${myHolds.filter(h=>h.status==='Active').map(h=>`<div class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs flex justify-between items-center gap-2 flex-wrap"><div><b>${esc(h.model)} ${esc(h.storage||'')}</b><br><span class="text-emerald-400">IMEI ${esc(h.imei)}</span> • SRP ${peso(h.srp)} • until ${ftime(h.expires_at)}</div><button class="btn b-sl" onclick="releaseHold('${h.id}')">Release</button></div>`).join('')}</div><p class="text-[11px] text-slate-500 mt-2">Send your buyer to any branch counter with your reseller code.</p></div>`:''}
-  <div><h3 class="font-extrabold text-base mb-3">📦 Wholesale inventory — ready to post</h3><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">${rCat.map(u=>{const srp=num(u.wholesale)+mk;return `<div class="card p-3 border-purple-500/20 flex flex-col gap-2"><div class="h-36 rounded-xl overflow-hidden">${phoneImg(u)}</div><span class="pill bg-purple-500/10 text-purple-300 w-fit">${meR.stealth?'🔥 Verified Brand New Unit':'📦 '+esc(S.name)+' Authorized Stock'}</span><h4 class="font-extrabold text-sm">${esc(u.model)}</h4><p class="text-[11px] text-slate-400">${esc(u.storage)} • ${esc(u.condition)} • ${esc(bname(u.branch_id))}</p>
-  <div class="bg-slate-950 border border-slate-800 rounded-xl p-2 flex justify-between text-xs"><div><span class="text-slate-400 text-[9px] font-bold block">YOUR SRP</span><b class="text-purple-300 text-sm">${peso(srp)}</b></div><div class="text-right"><span class="text-slate-400 text-[9px] font-bold block">YOUR PROFIT</span><b class="text-emerald-400 text-sm">+${peso(mk)}</b></div></div>
-  <div class="flex gap-1.5"><button class="btn b-pu flex-1" onclick="holdUnit('${u.id}')">⏱️ Hold ${S.hold_hours}h</button><button class="btn b-sl" onclick="copyText(resCaption(rCat.find(x=>x.id==='${u.id}'),${srp}));toast('Caption copied')">📋 Caption</button></div></div>`}).join('')||'<div class="text-slate-500 text-sm col-span-full">No units available right now.</div>'}</div></div>
-  ${payouts.filter(p=>p.reseller_id===meR.user_id).length?`<div class="card p-4"><h3 class="font-extrabold text-sm mb-2">💸 Commission history</h3>${payouts.filter(p=>p.reseller_id===meR.user_id).map(p=>`<div class="flex justify-between text-xs py-1 border-b border-slate-800"><span>${fdate(p.created_at)} ${p.note?'• '+esc(p.note):''}</span><span><b>${peso(p.amount)}</b> <span class="pill ${p.status==='Paid'?'bg-emerald-600':'bg-amber-600'}">${p.status}</span></span></div>`).join('')}</div>`:''}`;
-}
-async function setMarkup(v){const {error}=await sb.from('mcg_resellers').update({markup:+v}).eq('user_id',meR.user_id);if(error)return err(error);meR.markup=+v;renderReseller()}
-async function toggleStealth(){const {error}=await sb.from('mcg_resellers').update({stealth:!meR.stealth}).eq('user_id',meR.user_id);if(error)return err(error);meR.stealth=!meR.stealth;renderReseller()}
-async function holdUnit(id){const {error}=await sb.rpc('mcg_hold_unit',{p_unit:id,p_markup:num(meR.markup)});if(error)return err(error);toast(`Locked for ${S.hold_hours} hours`);await refresh(true)}
-async function releaseHold(id){const {error}=await sb.rpc('mcg_release_hold',{p_hold:id});if(error)return err(error);await refresh(true)}
-
-/* ---------- staff POS ---------- */
-function posTab(t){ptab2=t;renderPos()}
-function renderPos(){
-  const pendC=contracts.filter(c=>c.status==='Active').length;
-  $('v-pos').innerHTML=`<div class="card p-4 flex justify-between items-center flex-wrap gap-3"><div><span class="pill bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">COUNTER TERMINAL</span><h2 class="text-lg font-black mt-1">Branch Staff POS</h2></div>
-   <div class="flex gap-2 flex-wrap"><button class="btn b-em" onclick="photoStudio()">📸 Legit-Buyer Photo Studio</button><button class="btn b-am" onclick="openZ()">🧾 Z-Reading</button><button class="btn b-sl" onclick="openSwapIntake()">🔄 Swap intake</button><button class="btn b-sl" onclick="copyPricelist()">📋 Pricelist</button></div></div>
-   <div class="flex gap-1.5 flex-wrap">${[['sell','💳 Sell'],['rto','📑 Rent-To-Own ('+pendC+')'],['rep','🛠️ Repairs'],['hold','⏱️ Reseller holds ('+holds.length+')']].map(([k,n])=>`<button class="btn ${k===ptab2?'on':'b-sl'}" onclick="posTab('${k}')">${n}</button>`).join('')}</div><div id="posBody"></div>`;
-  ({sell:posSell,rto:posRto,rep:posRep,hold:posHold})[ptab2]();
-}
-function posSell(){
-  $('posBody').innerHTML=`<div class="grid lg:grid-cols-3 gap-4"><div class="lg:col-span-2 space-y-3">
-   <div class="card p-3 flex flex-wrap gap-2"><select id="posBr" class="inp w-auto" onchange="posBranch=this.value;posList()"><option value="">All branches</option>${branches.map(b=>`<option value="${b.id}" ${String(b.id)===String(posBranch)?'selected':''}>${esc(b.name)}</option>`).join('')}</select>
-   <input id="posScan" class="inp flex-1 min-w-[180px]" placeholder="🔍 Scan / type IMEI or model, Enter" oninput="posList()" onkeydown="if(event.key==='Enter')posScanEnter()"><button class="btn b-sl" onclick="scanModal()">📷 Scan</button></div><div id="posList" class="grid sm:grid-cols-2 gap-3"></div></div>
-   <div class="card p-3 h-fit"><h3 class="font-black text-sm mb-2">Current sale</h3><div id="cartBox" class="space-y-2 text-xs"></div>
-   <div class="grid grid-cols-2 gap-2 mt-3"><div class="col-span-2"><label class="lbl">Customer name</label><input id="cName" class="inp"></div><div><label class="lbl">Contact no.</label><input id="cPhone" class="inp"></div>
-   <div><label class="lbl">Payment</label><select id="cPay" class="inp">${['Cash','GCash','Maya','Bank Transfer','Credit Card','Home Credit','Skyro','BDO Pay Later'].map(x=>`<option>${x}</option>`).join('')}</select></div>
-   <div><label class="lbl">Discount ₱ (PIN)</label><input id="cDisc" type="number" min="0" class="inp" value="0" oninput="renderCart()"></div><div><label class="lbl">Warranty days</label><select id="cWar" class="inp"><option>7</option><option selected>30</option><option>90</option><option value="365">1 year</option></select></div></div>
-   <div class="flex justify-between text-base font-black mt-3"><span>Total</span><span id="cartTotal" class="text-amber-300">₱0</span></div>
-   <button id="coBtn" class="btn b-em w-full mt-2" onclick="checkout()">⚡ Complete sale & print receipt</button><button class="btn b-sl w-full mt-2" onclick="cart=[];cartHold=null;renderCart()">Clear</button></div></div>
-   <div class="card p-3"><h3 class="font-black text-sm mb-2">Recent sales</h3><div id="recentSales" class="space-y-2 text-xs"></div></div>`;
-  posList();renderCart();renderRecent();
-}
-const holdOf=u=>holds.find(h=>h.unit_id===u.id);
-function posList(){
-  const q=($('posScan')?.value||'').toLowerCase();
-  const list=units.filter(u=>(u.status==='Available')&&(!posBranch||String(u.branch_id)===String(posBranch))&&(!q||(u.model+u.imei+u.storage).toLowerCase().includes(q)));
-  $('posList').innerHTML=list.map(u=>{const h=holdOf(u),r=h&&resellers.find(x=>x.user_id===h.reseller_id);return `<div class="card p-2 flex gap-3 items-center ${h?'border-purple-500/40':''}"><div class="w-14 h-14 rounded-lg overflow-hidden shrink-0">${phoneImg(u)}</div><div class="flex-1 min-w-0"><div class="font-bold text-xs truncate">${esc(u.model)}</div><div class="text-[10px] text-slate-400">${esc(u.storage)} • IMEI ${esc(u.imei)} • ${esc(bname(u.branch_id))}</div><div class="font-black text-amber-300 text-sm">${peso(h?h.srp:u.price)}</div>${h?`<div class="text-[10px] text-purple-300">⏱️ Hold by ${esc(r?.name||'reseller')} until ${ftime(h.expires_at)}</div>`:''}</div><button class="btn ${h?'b-pu':'b-em'}" onclick="addCart('${u.id}')">${h?'Reseller sale':'+'}</button></div>`}).join('')||'<div class="text-slate-400 col-span-full text-center py-8 text-sm">No available units.</div>';
-}
-function posScanEnter(){const q=$('posScan').value.trim();const u=units.find(x=>x.imei===q&&x.status==='Available');if(u){addCart(u.id);$('posScan').value='';posList()}else toast('No available unit with that IMEI',true)}
-function addCart(id){
-  if(S.frozen)return toast('Terminal is frozen by owner',true);
-  const u=units.find(x=>x.id===id),h=holdOf(u);
-  if(h){cart=[id];cartHold=h.id}else{if(cartHold){cart=[];cartHold=null}if(!cart.includes(id))cart.push(id)}
-  renderCart();toast('Added to sale');
-}
-const cartItems=()=>cart.map(id=>units.find(u=>u.id===id)).filter(u=>u&&u.status==='Available');
-function cartSub(items){const h=cartHold&&holds.find(x=>x.id===cartHold);return items.reduce((a,u)=>a+num(h&&h.unit_id===u.id?h.srp:u.price),0)}
-function renderCart(){
-  if(!$('cartBox'))return;const items=cartItems();cart=items.map(u=>u.id);if(!items.length)cartHold=null;
-  $('cartBox').innerHTML=(cartHold?`<div class="text-[10px] text-purple-300">Reseller sale — commission goes to the reseller</div>`:'')+items.map(u=>`<div class="flex justify-between gap-2 bg-slate-950 p-2 rounded-lg"><span class="truncate">${esc(u.model)}</span><span class="font-bold">${peso(cartSub([u]))} <button class="text-rose-400 ml-1" onclick="cart=cart.filter(x=>x!=='${u.id}');renderCart()">✕</button></span></div>`).join('')||'<div class="text-slate-500 text-center py-3">Cart empty</div>';
-  const sub=cartSub(items);$('cartTotal').textContent=peso(sub-Math.min(+$('cDisc').value||0,sub));
-}
-function renderRecent(){
-  if(!$('recentSales'))return;
-  $('recentSales').innerHTML=sales.filter(x=>!x.void).slice(0,6).map(x=>`<div class="flex justify-between items-center bg-slate-950 p-2 rounded-lg"><div><b>${esc(x.model)}</b><div class="text-slate-400">${esc(x.buyer)} • ${esc(x.pay)} • ${fmt(x.created_at)}</div></div><div class="text-right"><div class="font-bold">${peso(net(x))}</div><button class="text-emerald-400" onclick="receipt('${x.id}')">Receipt</button> <button class="text-rose-400 ml-1" onclick="voidSale('${x.id}')">Void</button></div></div>`).join('')||'<div class="text-slate-500">No sales yet.</div>';
-}
-function askPin(title,cb){
-  if(role==='owner')return cb('');
-  openModal(`<h3 class="font-black mb-2">🔑 ${esc(title)}</h3><p class="text-xs text-slate-400 mb-2">Owner PIN required</p><input id="pinIn" type="password" inputmode="numeric" class="inp text-center text-xl tracking-[.4em]"><div class="flex gap-2 mt-3"><button class="btn b-am flex-1" id="pinOk">Authorize</button><button class="btn b-sl" onclick="closeModal()">Cancel</button></div>`);
-  const go=async()=>{const p=$('pinIn').value;const {data}=await sb.rpc('mcg_check_pin',{p_pin:p});if(data){closeModal();cb(p)}else toast('Wrong PIN',true)};
-  $('pinOk').onclick=go;$('pinIn').onkeydown=e=>{if(e.key==='Enter')go()};setTimeout(()=>$('pinIn').focus(),50);
-}
-function checkout(){
-  if(S.frozen)return toast('Terminal frozen by owner',true);
-  const items=cartItems();if(!items.length)return toast('Cart is empty',true);
-  const name=$('cName').value.trim();if(!name)return toast('Enter customer name',true);
-  const sub=cartSub(items),disc=Math.min(+$('cDisc').value||0,sub);
-  if(disc>0)return askPin('Approve discount of '+peso(disc),p=>finish(items,name,disc,p));
-  finish(items,name,0,'');
-}
-async function finish(items,name,disc,pin){
-  $('coBtn').disabled=true;
-  const {data,error}=await sb.rpc('mcg_sell',{p_unit_ids:items.map(u=>u.id),p_buyer:name,p_phone:$('cPhone').value.trim(),p_pay:$('cPay').value,p_warranty:+$('cWar').value,p_discount:disc,p_pin:pin,p_hold:cartHold});
-  if($('coBtn'))$('coBtn').disabled=false;
-  if(error){err(error);return refresh(true)}
-  cart=[];cartHold=null;await refresh(true);toast('Sale completed ✅');receipt(data[0].id,data[0]);
-}
-function receiptHTML(s){return `<div style="font-family:monospace;font-size:12px;padding:8px"><center><b>${esc(S.name)}</b><br>${esc(bname(s.branch_id))}<br>${esc(S.phone)}</center><hr>${fmt(s.created_at)}<br>Receipt #${esc(s.id.slice(0,8).toUpperCase())}<br>Cashier: ${esc(s.staff_name)}<hr><b>${esc(s.model)}</b><br>${esc(s.storage||'')}<br>IMEI: ${esc(s.imei)}<br>Price: ${peso(s.price)}<br>${num(s.discount)?'Discount: -'+peso(s.discount)+'<br>':''}<b>TOTAL: ${peso(net(s))}</b><br>Paid via ${esc(s.pay)}<hr>Customer: ${esc(s.buyer)}<br>Warranty: ${s.warranty_days} days<br><center>Thank you! Verify warranty online with your IMEI.</center></div>`}
-let lastRcpt=null;
-function receipt(id,row){const s=row||sales.find(x=>x.id===id);if(!s)return;lastRcpt=s;openModal(`<div class="bg-white text-black rounded-lg">${receiptHTML(s)}</div><div class="flex gap-2 mt-3"><button class="btn b-em flex-1" onclick="printHTML(receiptHTML(lastRcpt),'80mm')">🖨️ Print</button><button class="btn b-sl" onclick="closeModal()">Close</button></div>`)}
-function voidSale(id){askPin('Void sale',async p=>{const {error}=await sb.rpc('mcg_void_sale',{p_sale:id,p_pin:p});if(error)return err(error);await refresh(true);toast('Sale voided, unit restocked')})}
-function copyPricelist(){const l=avail().filter(u=>!posBranch||String(u.branch_id)===String(posBranch)).map(u=>`🔹 ${u.model} (${u.storage}) • ${u.condition} — ${peso(u.price)} | RTO DP ${peso(u.rto_dp)}`);copyText(`✨ ${S.name} — AVAILABLE UNITS ✨\n\n${l.join('\n')}\n\n${S.promo?'🔥 '+S.promo+'\n':''}📩 Message us to reserve!`);toast('Pricelist copied')}
-function posHold(){
-  $('posBody').innerHTML=`<div class="card p-4"><h3 class="font-black text-sm mb-2">⏱️ Active reseller holds</h3>${holds.map(h=>{const u=units.find(x=>x.id===h.unit_id),r=resellers.find(x=>x.user_id===h.reseller_id);return `<div class="bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs mb-2 flex justify-between items-center gap-2 flex-wrap"><div><b>${esc(u?.model||'')}</b> ${esc(u?.storage||'')}<br><span class="text-emerald-400">IMEI ${esc(u?.imei||'')}</span> • ${esc(r?.name||'')} (${esc(r?.code||'')}) • SRP ${peso(h.srp)} • expires ${ftime(h.expires_at)}</div><div class="flex gap-1"><button class="btn b-pu" onclick="posTab('sell');addCart('${h.unit_id}')">Sell</button><button class="btn b-sl" onclick="releaseHold('${h.id}')">Release</button></div></div>`}).join('')||'<p class="text-xs text-slate-500">No active holds right now.</p>'}</div>`;
-}
-
-/* ---------- rent-to-own ---------- */
-const paidOf=c=>cpays.filter(p=>p.contract_id===c.id).reduce((a,p)=>a+num(p.amount),0);
-function posRto(){
-  $('posBody').innerHTML=`<div class="flex justify-between items-center mb-2 flex-wrap gap-2"><h3 class="font-black text-sm">Rent-to-own contracts</h3><button class="btn b-em" onclick="rtoForm()">+ New contract</button></div>
-  ${contracts.map(c=>{const paid=paidOf(c),bal=num(c.price)-paid;return `<div class="card p-3 mb-2 text-xs"><div class="flex justify-between flex-wrap gap-2"><div><b>${esc(c.contract_no)}</b> <span class="pill ${c.status==='Active'?'bg-emerald-600':c.status==='Completed'?'bg-slate-600':'bg-rose-600'}">${c.status}</span><div class="text-sm font-bold mt-1">${esc(c.customer)} • ${esc(c.phone)}</div><div class="text-slate-400">${esc(c.unit_label)} • IMEI ${esc(c.imei)} • ${esc(bname(c.branch_id))}</div></div>
-  <div class="text-right"><div>Price ${peso(c.price)}</div><div class="text-emerald-400">Paid ${peso(paid)}</div><div class="text-amber-300 font-black">Balance ${peso(bal)}</div><div class="text-slate-400">${c.months} × ${peso(c.monthly)}</div></div></div>
-  <div class="flex gap-1.5 mt-2 flex-wrap">${c.status==='Active'?`<button class="btn b-em" onclick="payForm('${c.id}')">+ Record payment</button>`:''}<button class="btn b-sl" onclick="contractDoc('${c.id}')">🖨️ Contract</button><button class="btn b-sl" onclick="payHistory('${c.id}')">History</button>${role==='owner'&&c.status!=='Completed'?`<button class="btn b-sl" onclick="setContract('${c.id}','${c.status==='Active'?'Defaulted':'Active'}')">${c.status==='Active'?'Mark defaulted':'Reactivate'}</button>`:''}</div></div>`}).join('')||'<p class="text-xs text-slate-500">No contracts yet.</p>'}`;
-}
-function rtoForm(){
-  const list=units.filter(u=>u.status==='Available'&&!holdOf(u));
-  openModal(`<h3 class="font-black mb-3">New Rent-To-Own contract</h3><div class="grid grid-cols-2 gap-2">
-  <div class="col-span-2"><label class="lbl">Unit</label><select id="rUnit" class="inp" onchange="rtoCalc()">${list.map(u=>`<option value="${u.id}">${esc(u.model)} ${esc(u.storage)} — ${peso(u.price)} (${esc(bname(u.branch_id))})</option>`).join('')}</select></div>
-  <div class="col-span-2"><label class="lbl">Customer full name</label><input id="rName" class="inp"></div><div><label class="lbl">Mobile no.</label><input id="rPhone" class="inp"></div><div><label class="lbl">Valid ID (type + no.)</label><input id="rId" class="inp"></div>
-  <div class="col-span-2"><label class="lbl">Home address</label><input id="rAddr" class="inp"></div><div><label class="lbl">Reference 1 (name + no.)</label><input id="rRef1" class="inp"></div><div><label class="lbl">Reference 2 (name + no.)</label><input id="rRef2" class="inp"></div>
-  <div><label class="lbl">Downpayment ₱</label><input id="rDp" type="number" class="inp" oninput="rtoCalc()"></div><div><label class="lbl">Months</label><input id="rMo" type="number" min="1" max="24" value="${S.rto_months||3}" class="inp" oninput="rtoCalc()"></div></div>
-  <div id="rCalc" class="bg-slate-950 rounded-lg p-3 text-xs mt-2"></div><div class="flex gap-2 mt-3"><button id="rGo" class="btn b-em flex-1" onclick="createContract()">Create contract & collect DP</button><button class="btn b-sl" onclick="closeModal()">Cancel</button></div>`);
-  if(list.length){$('rDp').value=list[0].rto_dp;rtoCalc()}
-}
-function rtoCalc(){const u=units.find(x=>x.id===$('rUnit').value);if(!u)return;const dp=+$('rDp').value||0,mo=Math.max(1,+$('rMo').value||1);$('rCalc').innerHTML=`Price ${peso(u.price)} • Min DP ${peso(u.rto_dp)}<br>Balance after DP <b>${peso(u.price-dp)}</b> → <b class="text-emerald-400">${mo} × ${peso(Math.ceil((u.price-dp)/mo))}</b>`}
-async function createContract(){
-  $('rGo').disabled=true;
-  const {data,error}=await sb.rpc('mcg_create_contract',{p_unit:$('rUnit').value,p_customer:$('rName').value,p_phone:$('rPhone').value,p_address:$('rAddr').value,p_id:$('rId').value,p_ref1:$('rRef1').value,p_ref2:$('rRef2').value,p_dp:+$('rDp').value,p_months:+$('rMo').value});
-  if(error){$('rGo').disabled=false;return err(error)}
-  await refresh(true);toast('Contract created');contractDoc(data.id,data)
-}
-function payForm(id){const c=contracts.find(x=>x.id===id),bal=num(c.price)-paidOf(c);openModal(`<h3 class="font-black mb-2">Payment — ${esc(c.contract_no)}</h3><p class="text-xs text-slate-400 mb-2">${esc(c.customer)} • balance ${peso(bal)} • monthly ${peso(c.monthly)}</p><label class="lbl">Amount ₱</label><input id="pAmt" type="number" class="inp" value="${Math.min(bal,num(c.monthly))}"><label class="lbl mt-2">Method</label><select id="pMeth" class="inp"><option>Cash</option><option>GCash</option><option>Maya</option><option>Bank Transfer</option></select><label class="lbl mt-2">Note</label><input id="pNote" class="inp"><div class="flex gap-2 mt-3"><button class="btn b-em flex-1" onclick="recordPay('${id}')">Save payment</button><button class="btn b-sl" onclick="closeModal()">Cancel</button></div>`)}
-async function recordPay(id){const {error}=await sb.rpc('mcg_record_payment',{p_contract:id,p_amount:+$('pAmt').value,p_method:$('pMeth').value,p_note:$('pNote').value});if(error)return err(error);closeModal();await refresh(true);toast('Payment recorded')}
-function payHistory(id){const c=contracts.find(x=>x.id===id);openModal(`<h3 class="font-black mb-2">${esc(c.contract_no)} — payments</h3>${cpays.filter(p=>p.contract_id===id).map(p=>`<div class="flex justify-between text-xs py-1.5 border-b border-slate-800"><span>${fmt(p.paid_at)} • ${esc(p.method)} ${p.note?'• '+esc(p.note):''}<br><span class="text-slate-500">${esc(p.by_name||'')}</span></span><b>${peso(p.amount)}</b></div>`).join('')}<button class="btn b-sl w-full mt-3" onclick="closeModal()">Close</button>`)}
-async function setContract(id,s){const {error}=await sb.rpc('mcg_set_contract_status',{p_id:id,p_status:s});if(error)return err(error);await refresh(true)}
-function contractDoc(id,row){
-  const c=row||contracts.find(x=>x.id===id);if(!c)return;
-  const html=`<div style="font-family:Georgia,serif;font-size:13px;line-height:1.5;padding:24px;max-width:780px;margin:auto"><h2 style="text-align:center;margin:0">${esc(S.name)}</h2><p style="text-align:center;margin:0 0 12px">${esc(bname(c.branch_id))} • ${esc(S.phone)}</p>
-  <h3 style="text-align:center;text-decoration:underline">CONTRACT OF SALE ON INSTALLMENT (RENT-TO-OWN)</h3><p><b>Contract No.:</b> ${esc(c.contract_no)} &nbsp; <b>Date:</b> ${fdate(c.created_at)}</p>
-  <p><b>Buyer:</b> ${esc(c.customer)}<br><b>Address:</b> ${esc(c.address)}<br><b>Mobile:</b> ${esc(c.phone)} &nbsp; <b>ID:</b> ${esc(c.id_note||'')}<br><b>References:</b> ${esc(c.ref1||'')} ; ${esc(c.ref2||'')}</p>
-  <p><b>Unit:</b> ${esc(c.unit_label)} &nbsp; <b>IMEI/Serial:</b> ${esc(c.imei)}</p>
-  <p><b>Total price:</b> ${peso(c.price)} &nbsp; <b>Downpayment paid:</b> ${peso(c.dp)} &nbsp; <b>Balance:</b> ${peso(num(c.price)-num(c.dp))}, payable in <b>${c.months}</b> monthly installment(s) of <b>${peso(c.monthly)}</b>.</p>
-  <ol style="padding-left:18px"><li>The Seller delivers the unit to the Buyer upon payment of the downpayment. Pursuant to Article 1478 of the Civil Code of the Philippines, ownership of the unit shall not pass to the Buyer until the full price has been paid.</li><li>The Buyer shall pay each installment on or before its monthly due date at any branch or through the Seller's official payment accounts only.</li><li>The Buyer shall keep the unit in good condition, shall not sell, pledge, lease or otherwise dispose of it, and shall not remove or tamper with its IMEI/serial identifiers until fully paid.</li><li>Failure to pay any installment when due entitles the Seller to the remedies allowed by law, including repossession of the unit, subject to applicable law.</li><li>The Buyer authorizes the Seller to contact the Buyer and the listed references regarding this account.</li><li>Warranty and servicing follow the store's warranty policy.</li></ol>
-  <p style="font-size:11px;color:#555">Template contract — have it reviewed by your lawyer before use.</p>
-  <table style="width:100%;margin-top:40px;text-align:center"><tr><td>_____________________<br>Buyer's signature</td><td>_____________________<br>For ${esc(S.name)}</td></tr></table></div>`;
-  openModal(`<div class="bg-white text-black rounded-lg max-h-[60vh] overflow-auto">${html}</div><div class="flex gap-2 mt-3"><button class="btn b-em flex-1" id="prC">🖨️ Print contract</button><button class="btn b-sl" onclick="closeModal()">Close</button></div>`);
-  $('prC').onclick=()=>printHTML(html,'100%');
-}
-
-/* ---------- repairs ---------- */
-function posRep(){
-  $('posBody').innerHTML=`<div class="flex justify-between items-center mb-2"><h3 class="font-black text-sm">Repair jobs</h3><button class="btn b-em" onclick="repForm()">+ New job</button></div>
-  ${repairs.map(r=>`<div class="card p-3 mb-2 text-xs"><div class="flex justify-between flex-wrap gap-2"><div><b>${esc(r.job_no)}</b> • ${esc(r.device)}<div class="text-slate-400">${esc(r.customer)} • ${esc(r.phone)} • ${esc(bname(r.branch_id))}</div><div class="text-slate-500">${esc(r.issue)}</div></div><div class="text-right">${r.quote!=null?`<div class="font-bold">${peso(r.quote)}</div>`:''}<div class="text-slate-500">${fmt(r.updated_at)}</div></div></div>
-  <div class="grid grid-cols-3 gap-2 mt-2"><select class="inp" onchange="updRepair('${r.id}',{status:this.value})">${STATUSES.map(s=>`<option ${s===r.status?'selected':''}>${s}</option>`).join('')}</select><input class="inp col-span-2" placeholder="Note shown to customer" value="${esc(r.public_note)}" onchange="updRepair('${r.id}',{public_note:this.value})"></div></div>`).join('')||'<p class="text-xs text-slate-500">No repair jobs yet.</p>'}`;
-}
-function repForm(){openModal(`<h3 class="font-black mb-3">New repair job</h3><div class="grid grid-cols-2 gap-2"><div class="col-span-2"><label class="lbl">Customer</label><input id="rpC" class="inp"></div><div><label class="lbl">Phone</label><input id="rpP" class="inp"></div><div><label class="lbl">Branch</label><select id="rpB" class="inp">${branches.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select></div><div class="col-span-2"><label class="lbl">Device</label><input id="rpD" class="inp" placeholder="iPhone 13 128GB"></div><div class="col-span-2"><label class="lbl">Issue</label><input id="rpI" class="inp" placeholder="LCD replacement"></div><div><label class="lbl">Quote ₱</label><input id="rpQ" type="number" class="inp"></div></div><div class="flex gap-2 mt-3"><button class="btn b-em flex-1" onclick="createRepair()">Create job</button><button class="btn b-sl" onclick="closeModal()">Cancel</button></div>`)}
-async function createRepair(){const {data,error}=await sb.rpc('mcg_create_repair',{p_customer:$('rpC').value,p_phone:$('rpP').value,p_device:$('rpD').value,p_issue:$('rpI').value,p_quote:$('rpQ').value===''?null:+$('rpQ').value,p_branch:+$('rpB').value});if(error)return err(error);await refresh(true);openModal(`<h3 class="font-black mb-2">Job created ✅</h3><p class="text-sm">Give the customer this job number:</p><div class="text-2xl font-black text-emerald-400 my-2">${esc(data)}</div><p class="text-xs text-slate-400">They track it on the website with the last 4 digits of their phone.</p><button class="btn b-sl w-full mt-3" onclick="closeModal()">Done</button>`)}
-async function updRepair(id,patch){const {error}=await sb.from('mcg_repairs').update(patch).eq('id',id);if(error)return err(error);toast('Updated');await refresh(true)}
-
-/* ---------- swaps, Z, scan, photo, QR ---------- */
-function openSwapIntake(){
-  openModal(`<h3 class="font-black mb-3">Walk-in Swap Intake</h3><div class="grid grid-cols-2 gap-2"><div class="col-span-2"><label class="lbl">Customer</label><input id="siName" class="inp"></div><div class="col-span-2"><label class="lbl">Trade-in phone</label><input id="siModel" class="inp"></div><div class="col-span-2"><label class="lbl">Specs / inspection</label><input id="siSpecs" class="inp" placeholder="91% BH • FaceID OK"></div>
-  <div class="col-span-2"><label class="lbl">Wants</label><select id="siTarget" class="inp">${avail().map(u=>`<option value="${u.id}">${esc(u.model)} — ${peso(u.price)}</option>`).join('')}</select></div><div class="col-span-2"><label class="lbl">Proposed cash top-up ₱</label><input id="siTop" type="number" class="inp"></div></div>
-  <div class="flex gap-2 mt-3"><button class="btn b-em flex-1" onclick="submitSwap()">Send to owner</button><button class="btn b-sl" onclick="closeModal()">Cancel</button></div>`);
-}
-async function submitSwap(){
-  const name=$('siName').value.trim(),model=$('siModel').value.trim(),top=+$('siTop').value;if(!name||!model||$('siTop').value===''||!(top>=0))return toast('Complete all fields',true);
-  const u=units.find(x=>x.id===$('siTarget').value);
-  const {error}=await sb.from('mcg_swaps').insert({buyer:name,trade_model:model,specs:$('siSpecs').value,target_unit_id:u?.id||null,target_name:u?u.model+' — '+peso(u.price):null,topup:top});
-  if(error)return err(error);closeModal();await refresh(true);toast('Sent to owner for approval');
-}
-function zData(){const s=sales.filter(x=>!x.void&&dayOf(x.created_at)===today());const by={};s.forEach(x=>by[x.pay]=(by[x.pay]||0)+net(x));return {s,by,total:s.reduce((a,x)=>a+net(x),0),disc:s.reduce((a,x)=>a+num(x.discount),0)}}
-function openZ(){
-  const z=zData();
-  openModal(`<h3 class="font-black mb-2">Z-Reading — ${today()}</h3><div class="text-sm space-y-1"><div class="flex justify-between"><span>Units sold</span><b>${z.s.length}</b></div>${Object.entries(z.by).map(([k,v])=>`<div class="flex justify-between text-slate-300"><span>${esc(k)}</span><b>${peso(v)}</b></div>`).join('')}<div class="flex justify-between"><span>Discounts</span><b>${peso(z.disc)}</b></div><div class="flex justify-between text-base border-t border-slate-700 pt-1"><span>Gross sales</span><b class="text-amber-300">${peso(z.total)}</b></div></div>
-  <label class="lbl mt-3">Cash counted in drawer ₱</label><input id="zCash" type="number" class="inp" oninput="zVar()"><div id="zVarOut" class="text-sm mt-1"></div><div class="flex gap-2 mt-3"><button class="btn b-em flex-1" onclick="submitZ()">Submit to owner</button><button class="btn b-sl" onclick="closeModal()">Close</button></div>`);
-}
-function zVar(){const z=zData(),exp=z.by['Cash']||0,d=(+$('zCash').value)-exp;$('zVarOut').innerHTML=`Expected cash ${peso(exp)} — <b class="${d===0?'text-emerald-400':'text-rose-400'}">${d===0?'balanced':(d>0?'over ':'SHORT ')+peso(Math.abs(d))}</b>`}
-async function submitZ(){if($('zCash').value==='')return toast('Enter counted cash',true);const {error}=await sb.rpc('mcg_submit_z',{p_counted:+$('zCash').value});if(error)return err(error);closeModal();toast('Z-Reading submitted')}
-let scanner=null;
-function scanModal(){
-  openModal(`<h3 class="font-black mb-2">📷 Scan IMEI barcode</h3><div id="scanBox" class="rounded-xl overflow-hidden"></div><button class="btn b-sl w-full mt-3" onclick="closeModal()">Close</button>`);
-  if(typeof Html5Qrcode==='undefined')return $('scanBox').innerHTML='<p class="text-xs text-rose-400 p-3">Scanner library failed to load.</p>';
-  scanner=new Html5Qrcode('scanBox');
-  scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:260,height:120}},txt=>{const u=units.find(x=>x.imei===txt.trim()&&x.status==='Available');closeModal();if(u){addCart(u.id)}else toast('No available unit for '+txt,true)},()=>{}).catch(e=>{$('scanBox').innerHTML='<p class="text-xs text-rose-400 p-3">Camera unavailable: '+esc(e)+'</p>'});
-}
-function stopScan(){if(scanner){const s=scanner;scanner=null;s.stop().then(()=>s.clear()).catch(()=>{})}}
-let camStream=null;
-function stopCam(){if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null}}
-function photoStudio(){
-  openModal(`<div class="flex justify-between mb-2"><h3 class="font-extrabold text-base">📸 "Legit Buyer" Photo Studio</h3><button onclick="closeModal()" class="text-slate-400">✕</button></div><p class="text-xs text-slate-400 mb-2">Photo of the happy customer with their new gadget, stamped with ${esc(S.name)} branding for Facebook. Photos stay on your device — nothing is uploaded.</p>
-  <div class="relative rounded-xl overflow-hidden bg-slate-950 border border-slate-800"><video id="camV" autoplay playsinline muted class="w-full max-h-72 object-cover"></video><canvas id="camC" class="hidden w-full"></canvas></div>
-  <div class="flex gap-2 mt-3 flex-wrap"><button class="btn b-em flex-1" onclick="snap()">📷 Capture</button><label class="btn b-sl cursor-pointer">Upload photo<input type="file" accept="image/*" class="hidden" onchange="stampFile(this)"></label><button class="btn b-sl hidden" id="camSave" onclick="saveSnap()">💾 Save</button></div>`);
-  navigator.mediaDevices?.getUserMedia({video:{facingMode:'user'}}).then(s=>{camStream=s;$('camV').srcObject=s}).catch(()=>{});
-}
-function stamp(src,w,h){const c=$('camC');c.width=w;c.height=h;const x=c.getContext('2d');x.drawImage(src,0,0,w,h);const bh=Math.round(h*.09);x.fillStyle='rgba(5,150,105,.92)';x.fillRect(0,h-bh,w,bh);x.fillStyle='#fff';x.font=`800 ${Math.round(bh*.5)}px sans-serif`;x.textAlign='center';x.textBaseline='middle';x.fillText(`${S.name} — SOLD ✅  ${fdate(Date.now())}`,w/2,h-bh/2);c.classList.remove('hidden');$('camV').classList.add('hidden');$('camSave').classList.remove('hidden');stopCam()}
-function snap(){const v=$('camV');if(!v.videoWidth)return toast('Camera not ready — use Upload photo',true);stamp(v,v.videoWidth,v.videoHeight)}
-function stampFile(inp){const f=inp.files[0];if(!f)return;const im=new Image();im.onload=()=>{const s=Math.min(1,1400/Math.max(im.width,im.height));stamp(im,Math.round(im.width*s),Math.round(im.height*s))};im.src=URL.createObjectURL(f)}
-function saveSnap(){$('camC').toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='legit-buyer-'+Date.now()+'.jpg';a.click()},'image/jpeg',.9)}
-function qrTag(id){
-  const u=units.find(x=>x.id===id);if(!u)return;const link=location.origin+location.pathname+'#unit='+u.id;
-  let svg='';try{const q=qrcode(0,'M');q.addData(link);q.make();svg=q.createSvgTag(5,0)}catch(e){svg='<div>QR unavailable</div>'}
-  const html=`<div style="text-align:center;font-family:sans-serif;padding:12px;width:260px;margin:auto"><div style="background:#059669;color:#fff;font-weight:800;padding:4px 8px;border-radius:6px;font-size:11px;display:inline-block">${esc(S.name)} — ${esc(bname(u.branch_id))}</div><h3 style="margin:8px 0 2px">${esc(u.model)}</h3><div style="font-size:12px;color:#444">${esc(u.storage)} • ${esc(u.condition)}</div><div style="margin:8px auto;width:150px">${svg}</div><div style="font-size:12px;color:#047857;font-weight:700">Rent-To-Own: ${peso(u.rto_dp)} DP</div><div style="font-size:22px;font-weight:900">${peso(u.price)} Cash</div></div>`;
-  openModal(`<div class="bg-white text-black rounded-xl">${html}</div><div class="flex gap-2 mt-3"><button class="btn b-em flex-1" id="prQ">🖨️ Print price tag</button><button class="btn b-sl" onclick="closeModal()">Close</button></div>`);$('prQ').onclick=()=>printHTML(html,'70mm');
-}
-
-/* ---------- owner vault ---------- */
-function vTab(t){vtab=t;renderVault()}
-function renderVault(){
-  if(role!=='owner'){setView('public');return}
-  const pendSw=swaps.filter(s=>s.status==='Pending').length,pendRs=resellers.filter(r=>!r.active).length+payouts.filter(p=>p.status==='Pending'&&num(p.amount)>0).length;
-  const T=[['dash','📊 Dashboard'],['stock','📦 Inventory'],['res','🤝 Resellers'+(pendRs?' 🔴':'')],['swaps','🔄 Swaps'+(pendSw?' 🔴':'')],['sales','🧾 Sales'],['log','🕵️ Audit'],['set','⚙️ Settings']];
-  $('v-vault').innerHTML=`<div class="flex flex-wrap gap-2 justify-between items-center"><div class="flex gap-1 flex-wrap">${T.map(([k,n])=>`<button class="btn ${k===vtab?'on':'b-sl'}" onclick="vTab('${k}')">${n}</button>`).join('')}</div><button class="btn b-sl" onclick="toggleFreeze()">${S.frozen?'🔓 Unfreeze POS':'❄️ Freeze POS'}</button></div><div id="vb"></div>`;
-  ({dash:vDash,stock:vStock,res:vRes,swaps:vSwaps,sales:vSales,log:vLog,set:vSet})[vtab]();
-}
-async function toggleFreeze(){const {error}=await sb.from('mcg_settings').update({frozen:!S.frozen}).eq('id',1);if(error)return err(error);await refresh(true)}
-const stat=(l,v,c='text-white',s='')=>`<div class="card p-3"><div class="lbl">${l}</div><div class="text-xl font-black ${c}">${v}</div>${s?`<div class="text-[10px] text-slate-500">${s}</div>`:''}</div>`;
-function vDash(){
-  const all=sales.filter(s=>!s.void),td=all.filter(s=>dayOf(s.created_at)===today()),inv=units.filter(u=>u.status==='Available');
-  const cap=u=>num(costs[u.id]?.capital),sc=inv.reduce((a,u)=>a+cap(u),0),sv=inv.reduce((a,u)=>a+num(u.price),0);
-  const ac=contracts.filter(c=>c.status==='Active'),outst=ac.reduce((a,c)=>a+num(c.price)-paidOf(c),0);
-  const pendPay=payouts.filter(p=>p.status==='Pending').reduce((a,p)=>a+num(p.amount),0);
-  const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);const k=d.toLocaleDateString('en-CA',{timeZone:'Asia/Manila'});return {k:d.toLocaleDateString('en-PH',{weekday:'short',timeZone:'Asia/Manila'}),p:all.filter(s=>dayOf(s.created_at)===k).reduce((a,s)=>a+profit(s),0)}});
-  const mx=Math.max(1,...days.map(d=>d.p));
-  $('vb').innerHTML=`<div class="grid grid-cols-2 md:grid-cols-4 gap-3">${stat("Today's sales",peso(td.reduce((a,s)=>a+net(s),0)),'text-amber-300',td.length+' units')}${stat("Today's profit",peso(td.reduce((a,s)=>a+profit(s),0)),'text-emerald-400')}${stat('Active inventory value',peso(sv),'text-white',inv.length+' units • cap '+peso(sc))}${stat('Potential profit',peso(sv-sc),'text-sky-300')}${stat('Pending reseller payouts',peso(pendPay),'text-purple-400')}${stat('Active RTO contracts',ac.length,'text-emerald-400','Outstanding '+peso(outst))}${stat('Open repair jobs',repairs.filter(r=>r.status!=='Released').length)}${stat('Profit (last 1000 sales)',peso(all.reduce((a,s)=>a+profit(s),0)),'text-emerald-400')}</div>
-  <div class="grid md:grid-cols-2 gap-3 mt-3"><div class="card p-4"><div class="font-black text-sm mb-3">Profit — last 7 days</div><div class="flex items-end gap-2 h-36">${days.map(d=>`<div class="flex-1 flex flex-col items-center justify-end h-full"><div class="text-[9px] text-slate-400">${d.p?peso(d.p):''}</div><div class="w-full rounded-t bg-gradient-to-t from-emerald-700 to-emerald-400" style="height:${Math.max(3,d.p/mx*100)}%"></div><div class="text-[10px] mt-1 text-slate-400">${d.k}</div></div>`).join('')}</div></div>
-  <div class="card p-4"><div class="font-black text-sm mb-2">Per-branch performance</div><table class="w-full text-xs"><tr class="text-slate-400"><td>Branch</td><td class="text-right">Stock</td><td class="text-right">Sales</td><td class="text-right">Profit</td></tr>${branches.map(b=>{const ss=all.filter(s=>s.branch_id===b.id);return `<tr class="border-t border-slate-800"><td class="py-1">${esc(b.name)}</td><td class="text-right">${inv.filter(u=>u.branch_id===b.id).length}</td><td class="text-right">${peso(ss.reduce((a,s)=>a+net(s),0))}</td><td class="text-right text-emerald-400">${peso(ss.reduce((a,s)=>a+profit(s),0))}</td></tr>`}).join('')}</table></div></div>`;
-}
-function vStock(){
-  $('vb').innerHTML=`<div class="flex justify-between mb-3 flex-wrap gap-2"><div class="flex gap-2"><input class="inp w-56" placeholder="Search…" id="vsq" oninput="vStockRows()"><select id="vsb" class="inp w-auto" onchange="vStockRows()"><option value="">All branches</option>${branches.map(b=>`<option value="${b.id}">${esc(b.name)}</option>`).join('')}</select></div><div class="flex gap-2"><button class="btn b-sl" onclick="exportInvCSV()">CSV</button><button class="btn b-em" onclick="unitForm()">+ Add unit</button></div></div><div id="vsRows" class="space-y-2"></div>`;vStockRows();
-}
-function vStockRows(){
-  const q=($('vsq')?.value||'').toLowerCase(),b=$('vsb')?.value;
-  $('vsRows').innerHTML=units.filter(u=>(u.model+u.imei).toLowerCase().includes(q)&&(!b||String(u.branch_id)===b)).map(u=>{const c=costs[u.id]||{capital:0,supplier:''};return `<div class="card p-2 flex gap-3 items-center"><div class="w-14 h-14 rounded-lg overflow-hidden shrink-0">${phoneImg(u)}</div><div class="flex-1 min-w-0"><div class="font-bold text-xs truncate">${esc(u.model)} <span class="pill ${u.status==='Available'?'bg-emerald-600':u.status==='RTO'?'bg-purple-600':u.status==='Reserved'?'bg-amber-600':'bg-slate-600'}">${u.status}</span></div><div class="text-[10px] text-slate-400">${esc(u.storage)} • IMEI ${esc(u.imei)} • ${esc(bname(u.branch_id))} • ${esc(c.supplier)}</div><div class="text-[11px]">Cap ${peso(c.capital)} • Wholesale ${peso(u.wholesale??u.price)} → <b class="text-amber-300">${peso(u.price)}</b> <span class="text-emerald-400">(+${peso(num(u.price)-num(c.capital))})</span></div></div><div class="flex flex-col gap-1"><button class="btn b-sl" onclick="unitForm('${u.id}')">✏️</button><button class="btn b-sl" onclick="qrTag('${u.id}')">🏷️</button></div></div>`}).join('')||'<div class="text-slate-500 text-center py-6 text-sm">No units yet — tap “Add unit”.</div>';
-}
-let newPhoto;
-function unitForm(id){
-  const u=id?units.find(x=>x.id===id):{model:'',category:'Pre-Owned',storage:'',condition:'',imei:'',price:'',wholesale:'',rto_dp:3500,branch_id:branches[0]?.id,status:'Available',color:'#10b981',notes:'',photo_url:null};
-  const c=(id&&costs[id])||{capital:'',supplier:''};newPhoto=undefined;
-  openModal(`<h3 class="font-black mb-3">${id?'Edit':'Add'} unit</h3><div class="grid grid-cols-2 gap-2">
-  <div class="col-span-2 flex items-center gap-3"><div id="upPrev" class="w-24 h-24 rounded-xl overflow-hidden shrink-0">${phoneImg(u)}</div><div class="flex-1"><label class="btn b-sl cursor-pointer">📷 Upload / take photo<input type="file" accept="image/*" class="hidden" onchange="pickPhoto(this)"></label> <button class="btn b-sl" onclick="newPhoto=null;$('upPrev').innerHTML=phoneImg({category:$('uCat').value})">Remove</button><p class="text-[10px] text-slate-500 mt-1">Auto-resized. Use your own product photos.</p></div></div>
-  <div class="col-span-2"><label class="lbl">Model</label><input id="uModel" class="inp" value="${esc(u.model)}"></div>
-  <div><label class="lbl">Category</label><select id="uCat" class="inp">${['Pre-Owned','Brand New','Android','MacBook','iPad','Accessory'].map(x=>`<option ${x===u.category?'selected':''}>${x}</option>`).join('')}</select></div>
-  <div><label class="lbl">Branch</label><select id="uBr" class="inp">${branches.map(b=>`<option value="${b.id}" ${b.id===u.branch_id?'selected':''}>${esc(b.name)}</option>`).join('')}</select></div>
-  <div><label class="lbl">Storage</label><input id="uStor" class="inp" value="${esc(u.storage)}"></div><div><label class="lbl">Color</label><input id="uCol" type="color" class="inp h-9 p-1" value="${/^#[0-9a-f]{6}$/i.test(u.color||'')?u.color:'#10b981'}"></div>
-  <div class="col-span-2"><label class="lbl">Battery / condition</label><input id="uBh" class="inp" value="${esc(u.condition)}"></div><div class="col-span-2"><label class="lbl">IMEI / serial (unique)</label><input id="uImei" class="inp" value="${esc(u.imei)}"></div>
-  <div><label class="lbl">Cash price ₱</label><input id="uPrice" type="number" class="inp" value="${u.price}"></div><div><label class="lbl">Reseller wholesale ₱</label><input id="uWh" type="number" class="inp" value="${u.wholesale??''}" placeholder="= cash price"></div>
-  <div><label class="lbl">Capital ₱ (private)</label><input id="uCap" type="number" class="inp" value="${c.capital}"></div><div><label class="lbl">Supplier (private)</label><input id="uSup" class="inp" value="${esc(c.supplier)}"></div>
-  <div><label class="lbl">RTO min. downpayment ₱</label><input id="uDp" type="number" class="inp" value="${u.rto_dp}"></div><div><label class="lbl">Status</label><select id="uStat" class="inp">${['Available','Reserved','Sold','RTO'].map(x=>`<option ${x===u.status?'selected':''}>${x}</option>`).join('')}</select></div>
-  <div class="col-span-2"><label class="lbl">Notes</label><input id="uNotes" class="inp" value="${esc(u.notes)}"></div></div>
-  <div class="flex gap-2 mt-3"><button id="uSave" class="btn b-em flex-1" onclick="saveUnit('${id||''}')">Save</button>${id?`<button class="btn b-rd" onclick="delUnit('${id}')">🗑</button>`:''}<button class="btn b-sl" onclick="closeModal()">Cancel</button></div>`);
-}
-async function pickPhoto(inp){const f=inp.files[0];if(!f)return;try{newPhoto=await resizeImage(f);$('upPrev').innerHTML=`<img src="${URL.createObjectURL(newPhoto)}" class="w-full h-full object-cover">`}catch(e){toast('Could not read image',true)}}
-async function saveUnit(id){
-  const g=k=>$(k).value.trim(),imei=g('uImei');
-  if(!g('uModel')||!imei||!(+$('uPrice').value>0))return toast('Model, IMEI and price are required',true);
-  $('uSave').disabled=true;
-  try{
-    const d={model:g('uModel'),category:$('uCat').value,branch_id:+$('uBr').value,storage:g('uStor'),color:$('uCol').value,condition:g('uBh'),imei,price:+$('uPrice').value,wholesale:$('uWh').value===''?null:+$('uWh').value,rto_dp:+$('uDp').value||0,status:$('uStat').value,notes:g('uNotes')};
-    if(newPhoto){const path=`${crypto.randomUUID()}.jpg`;const up=await sb.storage.from('mcg-photos').upload(path,newPhoto,{contentType:'image/jpeg',cacheControl:'31536000'});if(up.error)throw up.error;d.photo_url=sb.storage.from('mcg-photos').getPublicUrl(path).data.publicUrl}
-    else if(newPhoto===null)d.photo_url=null;
-    let uid=id;
-    if(id){const r=await sb.from('mcg_units').update(d).eq('id',id);if(r.error)throw r.error}
-    else{const r=await sb.from('mcg_units').insert(d).select('id').single();if(r.error)throw r.error;uid=r.data.id}
-    const r2=await sb.from('mcg_unit_costs').upsert({unit_id:uid,capital:+$('uCap').value||0,supplier:g('uSup')});if(r2.error)throw r2.error;
-    closeModal();await refresh(true);toast('Saved');
-  }catch(e){err(String(e.message||'').includes('duplicate')?{message:'That IMEI already exists'}:e);$('uSave')&&($('uSave').disabled=false)}
-}
-async function delUnit(id){if(!confirm('Delete this unit permanently? Sales history is kept.'))return;const {error}=await sb.from('mcg_units').delete().eq('id',id);if(error)return err(error);closeModal();await refresh(true)}
-function vRes(){
-  const pend=payouts.filter(p=>p.status==='Pending'&&num(p.amount)>0);
-  $('vb').innerHTML=`<div class="card p-4"><h3 class="font-black text-sm mb-2">Resellers</h3>${resellers.map(r=>`<div class="flex justify-between items-center text-xs py-2 border-b border-slate-800 gap-2 flex-wrap"><div><b>${esc(r.name)}</b> <span class="pill ${r.active?'bg-emerald-600':'bg-amber-600'}">${r.active?esc(r.code):'Pending'}</span><div class="text-slate-400">${esc(r.email)} • GCash ${esc(r.gcash||'—')} • markup ${peso(r.markup)}</div></div><div class="flex gap-1"><button class="btn ${r.active?'b-sl':'b-em'}" onclick="resActive('${r.user_id}',${!r.active})">${r.active?'Disable':'Approve'}</button></div></div>`).join('')||'<p class="text-xs text-slate-500">No reseller requests yet.</p>'}</div>
-  <div class="card p-4"><h3 class="font-black text-sm mb-2">💸 Commission payout queue</h3>${pend.map(p=>{const r=resellers.find(x=>x.user_id===p.reseller_id);return `<div class="bg-slate-950 border border-slate-800 p-3 rounded-xl flex justify-between items-center mb-2 text-xs gap-2 flex-wrap"><div><b>${esc(r?.name||'')}</b> (${esc(r?.code||'')})<br><span class="text-slate-400">Send via GCash to ${esc(r?.gcash||'—')} • ${fdate(p.created_at)}</span></div><div class="flex items-center gap-2"><b class="text-emerald-400">${peso(p.amount)}</b><button class="btn b-em" onclick="payOut('${p.id}')">Mark paid</button></div></div>`}).join('')||'<p class="text-xs text-slate-500">No pending payouts.</p>'}<p class="text-[11px] text-slate-500 mt-2">Pay the reseller yourself by GCash, then mark it paid with the reference number. This app does not move money.</p></div>`;
-}
-async function resActive(id,a){const {error}=await sb.rpc('mcg_reseller_active',{p_uid:id,p_active:a});if(error)return err(error);await refresh(true)}
-function payOut(id){openModal(`<h3 class="font-black mb-2">Mark payout as paid</h3><label class="lbl">GCash reference no.</label><input id="poRef" class="inp"><div class="flex gap-2 mt-3"><button class="btn b-em flex-1" onclick="doPayOut('${id}')">Confirm paid</button><button class="btn b-sl" onclick="closeModal()">Cancel</button></div>`)}
-async function doPayOut(id){const {error}=await sb.rpc('mcg_pay_payout',{p_id:id,p_ref:$('poRef').value});if(error)return err(error);closeModal();await refresh(true)}
-function vSwaps(){
-  $('vb').innerHTML=swaps.map(s=>`<div class="card p-3 mb-2"><div class="flex justify-between flex-wrap gap-2"><div><b>${esc(s.buyer)}</b> <span class="pill ${s.status==='Pending'?'bg-amber-600':s.status==='Approved'?'bg-emerald-600':'bg-rose-600'}">${s.status}</span><div class="text-xs">Trade: ${esc(s.trade_model)} <span class="text-slate-400">(${esc(s.specs)})</span></div><div class="text-xs">Wants: ${esc(s.target_name||'—')}</div><div class="text-[10px] text-slate-500">${fmt(s.created_at)}</div></div><div class="text-right"><div class="lbl">Top-up</div><div class="text-lg font-black text-amber-300">${peso(s.topup)}</div></div></div>${s.status==='Pending'?`<div class="flex gap-2 mt-2"><button class="btn b-em" onclick="decideSwap('${s.id}',true)">Approve</button><button class="btn b-rd" onclick="decideSwap('${s.id}',false)">Decline</button></div>`:''}</div>`).join('')||'<div class="text-slate-500 text-center py-8 text-sm">No swap requests.</div>';
-}
-async function decideSwap(id,ok){const {error}=await sb.rpc('mcg_decide_swap',{p_id:id,p_ok:ok});if(error)return err(error);await refresh(true)}
-function vSales(){
-  $('vb').innerHTML=`<div class="flex justify-end mb-2"><button class="btn b-sl" onclick="exportSalesCSV()">Export CSV</button></div>`+(sales.map(x=>`<div class="card p-2 mb-2 flex justify-between items-center text-xs ${x.void?'opacity-50':''}"><div><b>${esc(x.model)}</b> ${x.void?'<span class="pill bg-rose-600">VOID</span>':''}<div class="text-slate-400">${esc(x.buyer)} • ${esc(x.pay)} • ${fmt(x.created_at)} • ${esc(x.staff_name)} • ${esc(bname(x.branch_id))}</div></div><div class="text-right"><div class="font-bold">${peso(net(x))}</div><div class="text-emerald-400">+${peso(profit(x))}${num(x.commission)?` <span class="text-purple-300">(comm ${peso(x.commission)})</span>`:''}</div><button class="text-emerald-400" onclick="receipt('${x.id}')">Receipt</button>${x.void?'':` <button class="text-rose-400 ml-1" onclick="voidSale('${x.id}')">Void</button>`}</div></div>`).join('')||'<div class="text-slate-500 text-center py-8 text-sm">No sales yet.</div>');
-}
-function vLog(){$('vb').innerHTML=audit.map(l=>`<div class="card p-2 mb-1 text-xs flex gap-2"><span class="text-slate-500 w-28 shrink-0">${fmt(l.at)}</span><span class="w-28 shrink-0 font-bold ${l.kind==='warn'?'text-rose-400':l.kind==='sale'?'text-emerald-400':'text-sky-300'}">${esc(l.actor_name||'System')}</span><span>${esc(l.text)}</span></div>`).join('')||'<div class="text-slate-500 text-center py-8 text-sm">Nothing logged yet.</div>'}
-function vSet(){
-  $('vb').innerHTML=`<div class="grid md:grid-cols-2 gap-3"><div class="space-y-3"><div class="card p-4 space-y-2"><h3 class="font-black text-sm">Store info</h3>
-  ${[['sName','Store name',S.name],['sTag','Tagline',S.tag],['sAddr','General address',S.address],['sPhone','Phone',S.phone],['sEmail','Email',S.email||''],['sMsg','Messenger link (https://m.me/yourpage)',S.messenger],['sFb','Facebook page',S.facebook],['sPromo','Promo banner text',S.promo]].map(([i,l,v])=>`<div><label class="lbl">${l}</label><input id="${i}" class="inp" value="${esc(v)}"></div>`).join('')}
-  <div class="grid grid-cols-2 gap-2"><div><label class="lbl">Reseller hold (hours)</label><input id="sHold" type="number" min="1" max="24" class="inp" value="${S.hold_hours}"></div><div><label class="lbl">Default RTO months</label><input id="sMo" type="number" min="1" max="24" class="inp" value="${S.rto_months}"></div></div><button class="btn b-em w-full" onclick="saveSettings()">Save settings</button></div>
-  <div class="card p-4"><h3 class="font-black text-sm mb-2">Branches</h3>${branches.map(b=>`<div class="grid grid-cols-3 gap-1 mb-2"><input class="inp" value="${esc(b.name)}" onchange="upBranch(${b.id},{name:this.value})"><input class="inp" value="${esc(b.address)}" onchange="upBranch(${b.id},{address:this.value})"><input class="inp" value="${esc(b.hours)}" onchange="upBranch(${b.id},{hours:this.value})"></div>`).join('')}<p class="text-[10px] text-slate-500">Name • address • hours (saves when you leave a field)</p></div></div>
-  <div class="space-y-3"><div class="card p-4"><h3 class="font-black text-sm mb-1">Official payment accounts</h3><p class="text-[11px] text-slate-400 mb-2">Shown to customers under “Verify Official Payment Accounts”. Enter only accounts that are really yours.</p>${payAcc.map(a=>`<div class="flex justify-between items-center text-xs py-1 border-b border-slate-800"><span>${esc(a.kind)} ${esc(a.number)} — ${esc(a.account_name)}</span><button class="text-rose-400" onclick="delAcc(${a.id})">Remove</button></div>`).join('')}
-  <div class="grid grid-cols-2 gap-1 mt-2"><select id="aKind" class="inp"><option>GCash</option><option>Maya</option><option>Bank</option></select><input id="aLabel" class="inp" placeholder="Label (e.g. BDO)"><input id="aNum" class="inp" placeholder="Number"><input id="aName" class="inp" placeholder="Account name"></div><button class="btn b-em w-full mt-2" onclick="addAcc()">Add account</button></div>
-  <div class="card p-4"><h3 class="font-black text-sm mb-2">Staff accounts</h3>${staffList.map(s=>`<div class="flex items-center justify-between text-xs py-1 border-b border-slate-800 gap-1 flex-wrap"><div><b>${esc(s.name||s.email)}</b> <span class="pill ${s.role==='owner'?'bg-amber-600':'bg-sky-700'}">${s.role}</span><div class="text-[10px] text-slate-400">${esc(s.email)}</div></div>${s.role==='owner'?'':`<div class="flex gap-1"><button class="btn ${s.active?'b-sl':'b-em'}" onclick="setStaff('${s.user_id}',${!s.active})">${s.active?'Disable':'Approve'}</button><button class="btn b-rd" onclick="rmStaff('${s.user_id}')">🗑</button></div>`}</div>`).join('')}</div>
-  <div class="card p-4"><h3 class="font-black text-sm mb-2">Owner PIN (discounts & voids by cashiers)</h3><input id="oldPin" type="password" inputmode="numeric" maxlength="8" class="inp mb-2" placeholder="Current PIN (default 1234)"><input id="newPin" type="password" inputmode="numeric" maxlength="8" class="inp" placeholder="New PIN (4–8 digits)"><button class="btn b-am w-full mt-2" onclick="changePin()">Update PIN</button></div>
-  <div class="card p-4"><h3 class="font-black text-sm mb-2">Data</h3><div class="flex gap-2 flex-wrap"><button class="btn b-sl" onclick="exportInvCSV()">Inventory CSV</button><button class="btn b-sl" onclick="exportSalesCSV()">Sales CSV</button></div></div></div></div>`;
-}
-async function saveSettings(){const {error}=await sb.from('mcg_settings').update({name:$('sName').value||'RF CHEIN GADGETS',tag:$('sTag').value,address:$('sAddr').value,phone:$('sPhone').value,email:$('sEmail').value.trim(),messenger:$('sMsg').value.trim(),facebook:$('sFb').value.trim(),promo:$('sPromo').value,hold_hours:+$('sHold').value||2,rto_months:+$('sMo').value||3}).eq('id',1);if(error)return err(error);await refresh(true);toast('Settings saved')}
-async function upBranch(id,patch){const {error}=await sb.from('mcg_branches').update(patch).eq('id',id);if(error)return err(error);await refresh(true)}
-async function addAcc(){if(!$('aNum').value.trim()||!$('aName').value.trim())return toast('Number and account name required',true);const {error}=await sb.from('mcg_pay_accounts').insert({kind:$('aKind').value,label:$('aLabel').value,number:$('aNum').value.trim(),account_name:$('aName').value.trim()});if(error)return err(error);await refresh(true)}
-async function delAcc(id){if(!confirm('Remove this account from the public list?'))return;const {error}=await sb.from('mcg_pay_accounts').update({active:false}).eq('id',id);if(error)return err(error);await refresh(true)}
-async function setStaff(id,a){const {error}=await sb.from('mcg_staff').update({active:a}).eq('user_id',id);if(error)return err(error);await refresh(true)}
-async function rmStaff(id){if(!confirm('Remove this staff record?'))return;const {error}=await sb.from('mcg_staff').delete().eq('user_id',id);if(error)return err(error);await refresh(true)}
-async function changePin(){const {error}=await sb.rpc('mcg_set_pin',{p_old:$('oldPin').value,p_new:$('newPin').value});if(error)return err(error);$('oldPin').value=$('newPin').value='';toast('PIN updated')}
-function exportInvCSV(){dl('inventory.csv',csv([['Model','Category','Branch','Storage','Condition','IMEI','Price','Wholesale','Capital','Supplier','Status'],...units.map(u=>[u.model,u.category,bname(u.branch_id),u.storage,u.condition,u.imei,u.price,u.wholesale??'',costs[u.id]?.capital??'',costs[u.id]?.supplier??'',u.status])]),'text/csv')}
-function exportSalesCSV(){dl('sales.csv',csv([['Date','Branch','Model','IMEI','Buyer','Payment','Price','Discount','Commission','Profit','Staff','Void'],...sales.map(s=>[fmt(s.created_at),bname(s.branch_id),s.model,s.imei,s.buyer,s.pay,s.price,s.discount,s.commission,role==='owner'?profit(s):'',s.staff_name,s.void])]),'text/csv')}
-
-/* ---------- boot ---------- */
-(async()=>{
-  await initAuth();await refresh();
-  const m=location.hash.match(/unit=([0-9a-f-]{36})/);if(m&&units.find(u=>u.id===m[1]))viewUnit(m[1]);
-  setInterval(()=>{if(!document.hidden&&$('modal').classList.contains('hidden')&&view!=='pos'&&!(view==='vault'&&vtab==='set'))refresh(true)},45000);
-  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh(true)});
-})();
-</script>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/store.js"></script>
 </body>
 </html>
