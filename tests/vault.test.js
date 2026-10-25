@@ -1,0 +1,68 @@
+// Browser test for the owner Vault. Backend calls are mocked (no real accounts or PINs).
+const { chromium } = require('playwright');
+const http = require('http'), fs = require('fs'), path = require('path');
+const SITE = path.join(__dirname, '..'), PORT = 8793, BASE = 'http://localhost:' + PORT;
+const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml' };
+const srv = http.createServer((q, s) => { let p = decodeURIComponent(q.url.split('?')[0]); if (p.endsWith('/')) p += 'index.html'; if (!path.extname(p)) p += '.html';
+  const f = path.join(SITE, p); if (!fs.existsSync(f)) { s.writeHead(404); return s.end(); } s.writeHead(200, { 'content-type': mime[path.extname(f)] || 'text/plain' }); fs.createReadStream(f).pipe(s); });
+let fails = 0; const ok = (c, m) => { console.log((c ? 'PASS ' : 'FAIL ') + m); if (!c) fails++; };
+const J = (route, body, status = 200) => route.fulfill({ status, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify(body) });
+(async () => {
+  await new Promise(r => srv.listen(PORT, r));
+  const br = await chromium.launch();
+  const ctx = await br.newContext({ viewport: { width: 390, height: 800 } });
+  const calls = []; const bodies = {}; let role = 'owner'; let pinState = 'unset'; let pinSet = null;
+  const BR = [{ id: 'B1', name: 'Silay', status: 'open', address: 'a', hours: 'h', address_confirmed: true }];
+  await ctx.route('**/*', async route => {
+    const rq = route.request(), u = new URL(rq.url());
+    if (u.hostname === 'localhost') return route.continue();
+    if (!u.hostname.endsWith('supabase.co')) return route.abort();
+    if (rq.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': '*' } });
+    const p = u.pathname; calls.push(p); bodies[p] = rq.postData();
+    if (p.startsWith('/auth/v1/token')) return J(route, { access_token: 't', refresh_token: 'r', expires_in: 3600, user: { id: 'o-1', email: 'owner@x.test' } });
+    if (p === '/rest/v1/mch_profiles') return J(route, [{ user_id: 'o-1', role, display_name: 'Boss', frozen: false }]);
+    if (p === '/rest/v1/mch_branches') return J(route, BR);
+    if (p === '/rest/v1/mch_settings') return J(route, [{ id: 1, promo_enabled: false, promo_line: '', tagline: 't', slogan: 's', contact_phone: '1', whatsapp: '2', contact_email: 'e', facebook_url: '', tiktok_url: '' }]);
+    if (p === '/rest/v1/mch_lenders') return J(route, [{ id: 'L1', name: 'Salmon', requirements: 'ID', sort: 1 }]);
+    if (p === '/rest/v1/rpc/mch_pin_state') return J(route, pinState);
+    if (p === '/rest/v1/rpc/mch_set_pin') { pinSet = JSON.parse(rq.postData()).p_new; pinState = 'needs_pin'; return J(route, 'ok'); }
+    if (p === '/rest/v1/rpc/mch_unlock') return J(route, JSON.parse(rq.postData()).p_pin === pinSet ? 'ok' : 'wrong');
+    if (p === '/rest/v1/rpc/mch_sales_summary') return J(route, [{ branch_id: 'B1', day: '2026-10-25', sales_count: 2, total: 80000 }]);
+    if (p === '/rest/v1/rpc/mch_pipeline') return J(route, [{ kind: 'application', label: 'new', n: 3 }, { kind: 'stock', label: 'available', n: 24 }]);
+    if (p === '/rest/v1/rpc/mch_owner_units') return J(route, [{ id: 'U1', branch_id: 'B1', brand: 'Apple', model: 'iPhone 16', price: 50000, cost: 42000, imei: '1', status: 'available', is_sample: true }]);
+    if (p === '/rest/v1/rpc/mch_save_settings') return J(route, null, 204);
+    if (p.startsWith('/functions/v1/')) return J(route, { ok: true, expired: 0, orphans: 0 });
+    return J(route, []);
+  });
+  const page = await ctx.newPage();
+  await page.goto(BASE + '/vault/');
+  ok(await page.locator('#app').isHidden() && await page.locator('#pinbox').isHidden(), 'Vault hidden before login');
+  await page.fill('#em', 'owner@x.test'); await page.fill('#pw', 'x'); await page.click('#lgo');
+  await page.waitForSelector('#pinbox:not([hidden])');
+  ok(/Create your PIN/.test(await page.locator('#pintitle').innerText()), 'first time: asks to create a PIN');
+  await page.fill('#pin', '123456'); await page.fill('#pin2', '654321'); await page.click('#pgo'); await page.waitForTimeout(300);
+  ok(/do not match/.test(await page.locator('#perr').innerText()), 'mismatched PINs rejected');
+  await page.fill('#pin', '12ab'); await page.fill('#pin2', '12ab'); await page.click('#pgo'); await page.waitForTimeout(300);
+  ok(/6 digits/.test(await page.locator('#perr').innerText()), 'non-6-digit PIN rejected');
+  await page.fill('#pin', '482913'); await page.fill('#pin2', '482913'); await page.click('#pgo');
+  await page.waitForSelector('#app:not([hidden])');
+  ok(calls.includes('/functions/v1/mch-purge-ids'), 'ID cleanup runs on open');
+  await page.waitForSelector('#view .box');
+  ok(/₱80,000/.test(await page.locator('#view').innerText()), 'overview shows 30-day sales');
+  ok(/new: 3/.test(await page.locator('#view').innerText()), 'overview shows application pipeline');
+  await page.click('#tabs [data-t=stock]'); await page.waitForSelector('#view .row');
+  ok(/cost ₱42,000/.test(await page.locator('#view').innerText()), 'stock shows private cost to owner');
+  await page.click('#tabs [data-t=settings]'); await page.waitForSelector('#view form');
+  await page.locator('#view form').first().locator('input[type=checkbox]').check();
+  await page.locator('#view form').first().locator('input[type=text]').first().fill('Zero downpayment this week');
+  await page.locator('#view form').first().getByRole('button', { name: 'Save' }).click(); await page.waitForTimeout(500);
+  const sent = JSON.parse(bodies['/rest/v1/rpc/mch_save_settings']);
+  ok(sent.p.promo_enabled === true && sent.p.promo_line === 'Zero downpayment this week', 'promo comes from owner-typed setting');
+  ok(!(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)), 'Vault: no horizontal scroll');
+  // non-owner is turned away
+  role = 'staff'; await page.click('#out'); await page.waitForSelector('#login');
+  await page.fill('#em', 'staff@x.test'); await page.fill('#pw', 'x'); await page.click('#lgo'); await page.waitForTimeout(600);
+  ok(/not the owner/.test(await page.locator('#lerr').innerText()) && await page.locator('#app').isHidden(), 'staff account cannot enter Vault');
+  await br.close(); srv.close();
+  console.log(fails ? 'FAILED ' + fails : 'ALL PASS'); process.exit(fails ? 1 : 0);
+})().catch(e => { console.error('ERR', e.message.split('\n').slice(0, 4).join(' | ')); process.exit(1); });

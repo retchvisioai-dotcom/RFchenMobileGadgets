@@ -6,4 +6,5 @@ The schema lives in the Supabase project's migration history (not duplicated her
 - Every MC table and function is prefixed `mch_`. Other apps in this Supabase project are not touched.
 - Customer ID photos: private bucket `mch-ids` (5 MB, JPG/PNG/WebP). Only the branch's staff and the owner can read them.
 - Known cleanup: the unused policy `mch_ids_read` on `storage.objects` (matches nothing) can be dropped when convenient.
-- Auto-deletion of declined/withdrawn applications' IDs after 30 days is wired up in Phase 4.
+- Phase 4 (owner PIN, owner-only settings/stock/people, reports) was applied directly as SQL, not through migration history. Edge functions: `mch-create-user`, `mch-purge-ids` (deletes IDs of declined/withdrawn applications 30 days after the decision, plus unused uploads; runs whenever the owner opens the Vault).
+- Not built yet: a "remove sample stock" button (needs a DELETE; to be done with the owner present).
