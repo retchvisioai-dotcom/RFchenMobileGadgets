@@ -42,6 +42,11 @@
     if (u.status !== 'available') btn.disabled = true;
     else btn.addEventListener('click', () => openReserve(u));
     body.appendChild(btn);
+    if (u.status === 'available') {
+      const ap = el('a', 'btn alt', 'Apply for installment');
+      ap.href = 'apply.html?unit=' + encodeURIComponent(u.id);
+      body.appendChild(ap);
+    }
     c.appendChild(body);
     return c;
   }
